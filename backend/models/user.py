@@ -37,7 +37,7 @@ class User(Base):
     especialidade = Column(String(100))
     cargo = Column(String(100))
     telefone = Column(String(20))
-    matricula = Column(String(30), unique=True)
+    matricula = Column(String(30), nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     ordens = relationship("OrdemServico", foreign_keys="OrdemServico.responsavel_id", back_populates="responsavel_rel")
