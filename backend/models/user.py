@@ -40,7 +40,7 @@ class User(Base):
     matricula = Column(String(30), unique=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    ordens = relationship("OrdemServico", back_populates="responsavel_rel")
+    ordens = relationship("OrdemServico", foreign_keys="OrdemServico.responsavel_id", back_populates="responsavel_rel")
 
 class Equipamento(Base):
     __tablename__ = "equipamentos"
