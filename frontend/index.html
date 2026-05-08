@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCM — Controle de Manutenção</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --nav:#0f1923;--accent:#38bdf8;--accent2:#f97316;--accent3:#22c55e;
+  --bg:#f0f2f5;--card:#fff;--border:#e5e7eb;--text:#111827;--muted:#6b7280;
+  --surface:#f9fafb;--font:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--nav);}
+.login-box{background:#1a2535;border:1px solid #2d3f52;border-radius:12px;padding:40px;width:360px;}
+.login-logo{text-align:center;margin-bottom:28px;}
+.login-logo h1{color:#fff;font-size:22px;font-weight:600;letter-spacing:0.05em;}
+.login-logo span{color:var(--accent);font-size:12px;letter-spacing:0.1em;}
+.login-field{margin-bottom:16px;}
+.login-field label{display:block;font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;}
+.login-field input{width:100%;background:#0f1923;border:1px solid #2d3f52;border-radius:8px;padding:10px 14px;color:#fff;font-family:var(--font);font-size:14px;}
+.login-field input:focus{outline:none;border-color:var(--accent);}
+.login-btn{width:100%;background:var(--accent);color:#0f1923;border:none;border-radius:8px;padding:12px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;}
+.login-btn:hover{opacity:0.88;}
+.login-hint{text-align:center;font-size:12px;color:#64748b;margin-top:16px;}
+.login-error{background:#7f1d1d;color:#fca5a5;padding:10px;border-radius:6px;font-size:13px;margin-bottom:12px;display:none;}
+
+/* APP */
+#app-screen{display:none;height:100vh;flex-direction:column;}
+.top-nav{background:var(--nav);display:flex;align-items:stretch;gap:0;overflow-x:auto;flex-shrink:0;height:52px;}
+.nav-logo{display:flex;align-items:center;gap:8px;padding:0 20px;border-right:1px solid rgba(255,255,255,0.08);}
+.nav-logo-t{color:#fff;font-size:13px;font-weight:600;letter-spacing:0.05em;}
+.nav-logo-b{background:var(--accent);color:#0f1923;font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px;}
+.nav-btn{background:none;border:none;cursor:pointer;padding:0 16px;font-family:var(--font);font-size:12px;font-weight:500;color:#94a3b8;display:flex;align-items:center;gap:6px;border-bottom:2px solid transparent;height:100%;white-space:nowrap;transition:all 0.15s;}
+.nav-btn:hover{color:#fff;background:rgba(255,255,255,0.05);}
+.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.nav-spacer{flex:1;}
+.nav-user{display:flex;align-items:center;gap:8px;padding:0 16px;border-left:1px solid rgba(255,255,255,0.08);}
+.nav-user-name{color:#cbd5e1;font-size:12px;}
+.nav-logout{background:none;border:1px solid #2d3f52;border-radius:6px;color:#94a3b8;font-size:11px;padding:4px 10px;cursor:pointer;font-family:var(--font);}
+.nav-logout:hover{color:#fff;border-color:#94a3b8;}
+.content{flex:1;overflow-y:auto;padding:24px;}
+.screen{display:none;}
+.screen.active{display:block;}
+
+/* COMPONENTS */
+.page-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.page-title{font-size:18px;font-weight:600;}
+.page-sub{font-size:13px;color:var(--muted);margin-top:2px;}
+.btn{border:none;cursor:pointer;font-family:var(--font);font-weight:500;border-radius:8px;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;}
+.btn-p{background:var(--accent);color:#0f1923;font-size:13px;padding:8px 16px;}
+.btn-p:hover{opacity:0.88;}
+.btn-s{background:var(--card);border:1px solid var(--border);color:var(--text);font-size:13px;padding:8px 14px;}
+.btn-s:hover{background:var(--surface);}
+.btn-sm{font-size:12px;padding:5px 10px;}
+.btn-danger{background:#fee2e2;color:#991b1b;border:none;}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
+.mc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden;}
+.mc-accent{position:absolute;top:0;left:0;width:3px;height:100%;}
+.mc-lbl{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;}
+.mc-val{font-size:26px;font-weight:600;font-family:var(--mono);line-height:1;}
+.mc-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;}
+.card-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:13px;font-weight:600;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:10px 16px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--border);background:var(--surface);}
+td{padding:11px 16px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--surface);}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;}
+.bg{background:#dcfce7;color:#14532d;}
+.ba{background:#fef3c7;color:#78350f;}
+.br{background:#fee2e2;color:#7f1d1d;}
+.bb{background:#dbeafe;color:#1e3a5f;}
+.bp{background:#ede9fe;color:#3b0764;}
+.bgy{background:var(--surface);color:var(--muted);}
+.filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+.search-wrap{position:relative;flex:1;min-width:180px;}
+.search-wrap input{padding-left:32px;}
+.search-wrap::before{content:'⌕';position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none;}
+.chip{display:inline-flex;align-items:center;padding:5px 12px;border-radius:100px;font-size:12px;font-weight:500;background:var(--card);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all 0.12s;}
+.chip.active{background:var(--accent);color:#0f1923;border-color:var(--accent);}
+.chip:hover:not(.active){border-color:var(--accent);color:var(--accent);}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.timeline-item{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);}
+.tl-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.tl-title{font-size:13px;font-weight:500;}
+.tl-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.prog-bar{height:6px;background:var(--surface);border-radius:3px;overflow:hidden;min-width:80px;}
+.prog-fill{height:100%;border-radius:3px;}
+.tag{display:inline-block;padding:2px 7px;border-radius:3px;font-size:11px;font-weight:500;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);}
+.inline-stats{display:flex;border-top:1px solid var(--border);}
+.is-stat{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px;}
+.is-val{font-size:18px;font-weight:600;font-family:var(--mono);}
+.is-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;}
+.divider-v{width:1px;background:var(--border);align-self:stretch;}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:1000;}
+.modal-ov.open{display:flex;}
+.modal{background:var(--card);border-radius:12px;border:1px solid var(--border);width:100%;max-width:640px;max-height:88vh;overflow-y:auto;}
+.modal-hdr{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--card);z-index:1;}
+.modal-title{font-size:15px;font-weight:600;}
+.close-btn{background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);line-height:1;padding:2px 6px;}
+.modal-ftr{padding:14px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:var(--card);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px;}
+.form-grid.g1{grid-template-columns:1fr;}
+.form-grid.g3{grid-template-columns:1fr 1fr 1fr;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field.full{grid-column:1/-1;}
+label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;}
+input,select,textarea{font-family:var(--font);font-size:13px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);width:100%;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(56,189,248,0.15);}
+textarea{resize:vertical;min-height:70px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:#0f1923;color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;z-index:2000;display:none;align-items:center;gap:8px;border:1px solid #2d3f52;}
+.toast.show{display:flex;}
+.loading{text-align:center;padding:40px;color:var(--muted);font-size:14px;}
+.empty{text-align:center;padding:40px;color:var(--muted);}
+.equip-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.equip-card-hdr{padding:14px 16px;display:flex;align-items:center;gap:12px;}
+.equip-avatar{width:36px;height:36px;border-radius:8px;background:var(--nav);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <h1>⚙ PCM</h1>
+      <span>CONTROLE DE MANUTENÇÃO</span>
+    </div>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-field"><label>E-mail</label><input type="email" id="login-email" value="admin@pcm.com" placeholder="seu@email.com"/></div>
+    <div class="login-field"><label>Senha</label><input type="password" id="login-pass" value="admin123" placeholder="••••••••"/></div>
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-hint">Demo: admin@pcm.com / admin123</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <nav class="top-nav">
+    <div class="nav-logo"><span class="nav-logo-t">PCM</span><span class="nav-logo-b">v2</span></div>
+    <button class="nav-btn active" onclick="nav('dash',this)">▦ Dashboard</button>
+    <button class="nav-btn" onclick="nav('os',this)">≡ Ordens de Serviço</button>
+    <button class="nav-btn" onclick="nav('agenda',this)">◫ Programação</button>
+    <button class="nav-btn" onclick="nav('equip',this)">⊞ Equipamentos</button>
+    <button class="nav-btn" onclick="nav('colabs',this)">◉ Colaboradores</button>
+    <button class="nav-btn" onclick="nav('rel',this)">⊟ Relatórios</button>
+    <div class="nav-spacer"></div>
+    <div class="nav-user"><span class="nav-user-name" id="nav-nome">—</span><button class="nav-logout" onclick="logout()">Sair</button></div>
+  </nav>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="s-dash" class="screen active">
+      <div class="page-hdr">
+        <div><div class="page-title">Dashboard</div><div class="page-sub" id="dash-sub">Carregando...</div></div>
+        <button class="btn btn-p btn-sm" onclick="openModal('m-os')">+ Nova OS</button>
+      </div>
+      <div class="metrics" id="dash-metrics"><div class="loading">Carregando indicadores...</div></div>
+      <div class="two-col" style="margin-bottom:16px;">
+        <div class="card"><div class="card-hdr"><span class="card-title">OS por Tipo</span></div><div style="padding:16px;position:relative;height:200px;"><canvas id="c-tipo" role="img" aria-label="OS por tipo"></canvas></div><div id="leg-tipo" style="display:flex;flex-wrap:wrap;gap:10px;padding:0 16px 14px;font-size:11px;color:var(--muted);"></div></div>
+        <div class="card"><div class="card-hdr"><span class="card-title">OS por Linha</span></div><div style="padding:16px;position:relative;height:200px;"><canvas id="c-linha" role="img" aria-label="OS por linha"></canvas></div></div>
+      </div>
+      <div class="two-col">
+        <div class="card"><div class="card-hdr"><span class="card-title">Últimas OS</span></div><div id="dash-ultimas"><div class="loading">...</div></div></div>
+        <div class="card"><div class="card-hdr"><span class="card-title">Preventivas — Próximos 7 dias</span></div><div id="dash-prev"><div class="loading">...</div></div></div>
+      </div>
+    </div>
+
+    <!-- OS -->
+    <div id="s-os" class="screen">
+      <div class="page-hdr">
+        <div><div class="page-title">Ordens de Serviço</div><div class="page-sub">Registro e controle</div></div>
+        <button class="btn btn-p" onclick="openModal('m-os')">+ Nova OS</button>
+      </div>
+      <div class="filter-bar">
+        <div class="search-wrap"><input type="text" id="os-search" placeholder="Buscar descrição, linha..." oninput="loadOS()"/></div>
+        <select id="os-tipo" onchange="loadOS()" style="width:auto;font-size:12px;padding:5px 10px;"><option value="">Todos os tipos</option><option>Corretiva</option><option>Preventiva</option><option>Preditiva</option><option>Melhoria</option></select>
+        <select id="os-status" onchange="loadOS()" style="width:auto;font-size:12px;padding:5px 10px;"><option value="">Todos os status</option><option>Aberta</option><option>Em andamento</option><option>Aguardando peça</option><option>Concluída</option><option>Cancelada</option></select>
+      </div>
+      <div class="card"><div class="table-wrap"><div id="os-table"><div class="loading">Carregando...</div></div></div></div>
+    </div>
+
+    <!-- AGENDA -->
+    <div id="s-agenda" class="screen">
+      <div class="page-hdr">
+        <div><div class="page-title">Programação de Manutenções</div><div class="page-sub">Plano de manutenção preventiva</div></div>
+        <button class="btn btn-p" onclick="openModal('m-prev')">+ Agendar</button>
+      </div>
+      <div class="two-col">
+        <div class="card"><div class="card-hdr"><span class="card-title">Plano de Preventivas</span><span id="prev-vencendo" class="badge ba"></span></div><div id="prev-table"><div class="loading">Carregando...</div></div></div>
+        <div class="card"><div class="card-hdr"><span class="card-title">Vencendo em 7 dias</span></div><div id="prev-alert"><div class="loading">Carregando...</div></div></div>
+      </div>
+    </div>
+
+    <!-- EQUIPAMENTOS -->
+    <div id="s-equip" class="screen">
+      <div class="page-hdr">
+        <div><div class="page-title">Cadastro de Equipamentos</div><div class="page-sub">Parque de máquinas</div></div>
+        <button class="btn btn-p" onclick="openModal('m-equip')">+ Cadastrar</button>
+      </div>
+      <div id="equip-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;"><div class="loading">Carregando...</div></div>
+    </div>
+
+    <!-- COLABORADORES -->
+    <div id="s-colabs" class="screen">
+      <div class="page-hdr">
+        <div><div class="page-title">Colaboradores</div><div class="page-sub">Equipe de manutenção</div></div>
+        <button class="btn btn-p" onclick="openModal('m-colab')">+ Cadastrar</button>
+      </div>
+      <div class="card"><div class="table-wrap"><div id="colabs-table"><div class="loading">Carregando...</div></div></div></div>
+    </div>
+
+    <!-- RELATÓRIOS -->
+    <div id="s-rel" class="screen">
+      <div class="page-hdr">
+        <div><div class="page-title">Relatórios</div><div class="page-sub">Indicadores e análises</div></div>
+      </div>
+      <div class="metrics" id="rel-kpis"></div>
+      <div class="two-col" style="margin-bottom:16px;">
+        <div class="card"><div class="card-hdr"><span class="card-title">OS por Mês (ano atual)</span></div><div style="padding:16px;position:relative;height:200px;"><canvas id="c-mes" role="img" aria-label="OS por mês"></canvas></div></div>
+        <div class="card"><div class="card-hdr"><span class="card-title">Horas por Responsável</span></div><div style="padding:16px;position:relative;height:200px;"><canvas id="c-resp" role="img" aria-label="Horas por responsável"></canvas></div></div>
+      </div>
+      <div class="card"><div class="card-hdr"><span class="card-title">Histórico Completo</span></div><div class="table-wrap"><div id="rel-table"><div class="loading">Carregando...</div></div></div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAIS -->
+<div class="modal-ov" id="m-os">
+  <div class="modal">
+    <div class="modal-hdr"><span class="modal-title">Nova Ordem de Serviço</span><button class="close-btn" onclick="closeModal('m-os')">×</button></div>
+    <div class="form-grid g3"><div class="field"><label>Nº OS</label><input id="os-num" readonly style="opacity:0.6"/></div><div class="field"><label>Data</label><input type="date" id="os-data"/></div><div class="field"><label>Turno</label><select id="os-turno"><option>Manhã</option><option>Tarde</option><option>Noite</option></select></div></div>
+    <div class="form-grid"><div class="field"><label>Equipamento</label><select id="os-equip"></select></div><div class="field"><label>Local / Componente</label><input id="os-local" placeholder="Ex: Dosador A"/></div></div>
+    <div class="form-grid g3"><div class="field"><label>Tipo</label><select id="os-tipo2"><option>Corretiva</option><option>Preventiva</option><option>Preditiva</option><option>Melhoria</option></select></div><div class="field"><label>Hora Início</label><input type="time" id="os-hi"/></div><div class="field"><label>Hora Fim</label><input type="time" id="os-hf"/></div></div>
+    <div class="form-grid g1"><div class="field full"><label>Descrição do Serviço</label><textarea id="os-desc" placeholder="Descreva o serviço realizado..."></textarea></div></div>
+    <div class="form-grid g1"><div class="field full"><label>Materiais / Peças</label><textarea id="os-mat" placeholder="Materiais utilizados..."></textarea></div></div>
+    <div class="form-grid"><div class="field"><label>Causa / Diagnóstico</label><input id="os-causa" placeholder="Ex: Desgaste, falha elétrica..."/></div><div class="field"><label>Responsável</label><select id="os-resp"></select></div></div>
+    <div class="form-grid"><div class="field"><label>Status</label><select id="os-stat"><option>Aberta</option><option>Em andamento</option><option>Aguardando peça</option><option>Concluída</option></select></div><div class="field"><label>Observações</label><input id="os-obs" placeholder="Observações adicionais..."/></div></div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-os')">Cancelar</button><button class="btn btn-p" onclick="saveOS()">Salvar OS</button></div>
+  </div>
+</div>
+
+<div class="modal-ov" id="m-prev">
+  <div class="modal">
+    <div class="modal-hdr"><span class="modal-title">Agendar Preventiva</span><button class="close-btn" onclick="closeModal('m-prev')">×</button></div>
+    <div class="form-grid"><div class="field"><label>Equipamento</label><select id="pr-equip"></select></div><div class="field"><label>Tipo</label><select id="pr-tipo"><option>Preventiva</option><option>Preditiva</option><option>Lubrificação</option><option>Inspeção</option><option>Calibração</option></select></div></div>
+    <div class="form-grid g3"><div class="field"><label>Data prevista</label><input type="date" id="pr-data"/></div><div class="field"><label>Frequência (dias)</label><input type="number" id="pr-freq" value="30" min="1"/></div><div class="field"><label>Responsável</label><select id="pr-resp"></select></div></div>
+    <div class="form-grid g1"><div class="field full"><label>Procedimento</label><textarea id="pr-proc" placeholder="Descreva o procedimento..."></textarea></div></div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-prev')">Cancelar</button><button class="btn btn-p" onclick="savePrev()">Agendar</button></div>
+  </div>
+</div>
+
+<div class="modal-ov" id="m-equip">
+  <div class="modal">
+    <div class="modal-hdr"><span class="modal-title">Cadastrar Equipamento</span><button class="close-btn" onclick="closeModal('m-equip')">×</button></div>
+    <div class="form-grid"><div class="field"><label>Código</label><input id="eq-cod" placeholder="EQ-006"/></div><div class="field"><label>Nome</label><input id="eq-nome" placeholder="Ex: Dosador Volumétrico"/></div></div>
+    <div class="form-grid"><div class="field"><label>Linha / Área</label><select id="eq-linha"><option>Linha 1 - Sachê</option><option>Linha 2 - Sachê</option><option>Linha 3 - Sachê</option><option>Linha 4 - Sachê</option><option>Linha 5 - Cartucho</option><option>Área Geral</option></select></div><div class="field"><label>Localização</label><input id="eq-local" placeholder="Ex: Setor A"/></div></div>
+    <div class="form-grid g3"><div class="field"><label>Fabricante</label><input id="eq-fab"/></div><div class="field"><label>Modelo</label><input id="eq-mod"/></div><div class="field"><label>Nº Série</label><input id="eq-ser" style="font-family:var(--mono)"/></div></div>
+    <div class="form-grid"><div class="field"><label>Data Instalação</label><input type="date" id="eq-dt"/></div><div class="field"><label>Criticidade</label><select id="eq-crit"><option>Alta</option><option>Média</option><option>Baixa</option></select></div></div>
+    <div class="form-grid g1"><div class="field full"><label>Observações</label><textarea id="eq-obs"></textarea></div></div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-equip')">Cancelar</button><button class="btn btn-p" onclick="saveEquip()">Cadastrar</button></div>
+  </div>
+</div>
+
+<div class="modal-ov" id="m-colab">
+  <div class="modal">
+    <div class="modal-hdr"><span class="modal-title">Cadastrar Colaborador</span><button class="close-btn" onclick="closeModal('m-colab')">×</button></div>
+    <div class="form-grid"><div class="field"><label>Nome completo</label><input id="co-nome"/></div><div class="field"><label>Matrícula</label><input id="co-mat"/></div></div>
+    <div class="form-grid"><div class="field"><label>E-mail</label><input type="email" id="co-email"/></div><div class="field"><label>Senha</label><input type="password" id="co-pass" placeholder="Mínimo 6 caracteres"/></div></div>
+    <div class="form-grid g3"><div class="field"><label>Cargo</label><input id="co-cargo" placeholder="Ex: Mecânico Sênior"/></div><div class="field"><label>Especialidade</label><select id="co-esp"><option>Mecânica</option><option>Elétrica</option><option>Eletromecânica</option><option>Instrumentação</option><option>Hidráulica</option><option>Pneumática</option></select></div><div class="field"><label>Perfil</label><select id="co-role"><option value="tecnico">Técnico</option><option value="gestor">Gestor</option><option value="admin">Admin</option></select></div></div>
+    <div class="form-grid g1"><div class="field full"><label>Telefone</label><input id="co-tel" placeholder="(XX) XXXXX-XXXX"/></div></div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-colab')">Cancelar</button><button class="btn btn-p" onclick="saveColab()">Cadastrar</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toast-txt"></span></div>
+
+<script>
+const API = '';
+let TOKEN = localStorage.getItem('pcm_token') || '';
+let USER = JSON.parse(localStorage.getItem('pcm_user') || 'null');
+let charts = {};
+let equipList = [], userList = [];
+
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json', ...(TOKEN ? { 'Authorization': 'Bearer ' + TOKEN } : {}) },
+    ...opts
+  });
+  if (res.status === 401) { logout(); return null; }
+  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.detail || 'Erro'); }
+  return res.json();
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value;
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  try {
+    const data = await api('/api/auth/token', { method: 'POST', body: JSON.stringify({ email, password: pass }) });
+    TOKEN = data.access_token;
+    USER = data.user;
+    localStorage.setItem('pcm_token', TOKEN);
+    localStorage.setItem('pcm_user', JSON.stringify(USER));
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'flex';
+    document.getElementById('nav-nome').textContent = USER.nome.split(' ')[0];
+    await loadMeta();
+    loadDash();
+  } catch(e) {
+    err.textContent = e.message;
+    err.style.display = 'block';
+  }
+}
+
+function logout() {
+  TOKEN = ''; USER = null;
+  localStorage.removeItem('pcm_token');
+  localStorage.removeItem('pcm_user');
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+async function loadMeta() {
+  const [equips, users] = await Promise.all([api('/api/equipamentos/'), api('/api/users/')]);
+  equipList = equips || [];
+  userList = users || [];
+  ['os-equip','pr-equip','eq-linha-sel'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+  });
+  const fillEquip = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '<option value="">— Selecionar —</option>' + equipList.map(e => `<option value="${e.id}">${e.nome} (${e.linha})</option>`).join('');
+  };
+  const fillUser = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '<option value="">— Selecionar —</option>' + userList.map(u => `<option value="${u.id}">${u.nome}</option>`).join('');
+  };
+  fillEquip('os-equip'); fillEquip('pr-equip');
+  fillUser('os-resp'); fillUser('pr-resp');
+}
+
+function nav(id, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s-' + id).classList.add('active');
+  btn.classList.add('active');
+  const loaders = { os: loadOS, agenda: loadAgenda, equip: loadEquip, colabs: loadColabs, rel: loadRel };
+  if (loaders[id]) loaders[id]();
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-ov').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); }));
+
+function toast(msg, ok = true) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-txt').textContent = (ok ? '✓ ' : '✗ ') + msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function typeBadge(t) {
+  const m = { 'Corretiva': 'br', 'Preventiva': 'bb', 'Preditiva': 'bp', 'Melhoria': 'bg' };
+  return `<span class="badge ${m[t] || 'bgy'}">${t}</span>`;
+}
+function statusBadge(s) {
+  const m = { 'Concluída': 'bg', 'Em andamento': 'bb', 'Aberta': 'ba', 'Aguardando peça': 'br', 'Cancelada': 'bgy' };
+  return `<span class="badge ${m[s] || 'bgy'}">${s}</span>`;
+}
+function critBadge(c) {
+  const m = { 'Alta': 'br', 'Média': 'ba', 'Baixa': 'bg' };
+  return `<span class="badge ${m[c] || 'bgy'}">${c}</span>`;
+}
+function roleBadge(r) {
+  const m = { 'admin': 'br', 'gestor': 'bp', 'tecnico': 'bb' };
+  const l = { 'admin': 'Admin', 'gestor': 'Gestor', 'tecnico': 'Técnico' };
+  return `<span class="badge ${m[r] || 'bgy'}">${l[r] || r}</span>`;
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────
+async function loadDash() {
+  const d = await api('/api/dashboard/stats');
+  if (!d) return;
+  const now = new Date();
+  document.getElementById('dash-sub').textContent = `Visão geral — ${now.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`;
+
+  const mets = [
+    ['Total OS', d.total_os, '#38bdf8', 'Todas as ordens'],
+    ['Concluídas', d.os_concluidas, '#22c55e', d.total_os ? Math.round(d.os_concluidas/d.total_os*100)+'% de conclusão' : '—'],
+    ['Pendentes', d.os_pendentes, '#f59e0b', 'Em aberto'],
+    ['Em andamento', d.os_em_andamento, '#38bdf8', 'Em execução'],
+    ['Tempo total', d.tempo_total_horas + 'h', '#f97316', 'Horas trabalhadas'],
+    ['Equipamentos', d.total_equipamentos, '#a78bfa', 'Cadastrados'],
+    ['Corretivas', d.os_corretivas, '#ef4444', 'Manutenção reativa'],
+    ['Prev. vencendo', d.preventivas_vencendo, '#f59e0b', 'Próximos 7 dias'],
+  ];
+  document.getElementById('dash-metrics').innerHTML = mets.map(([l, v, c, s]) =>
+    `<div class="mc"><div class="mc-accent" style="background:${c}"></div><div class="mc-lbl">${l}</div><div class="mc-val" style="color:${c}">${v}</div><div class="mc-sub">${s}</div></div>`
+  ).join('');
+
+  renderChartTipo(d);
+  renderChartLinha(d);
+
+  document.getElementById('dash-ultimas').innerHTML = d.ultimas_os.length
+    ? d.ultimas_os.map(o => `<div class="timeline-item"><div class="tl-dot" style="background:${o.tipo==='Corretiva'?'#f97316':'#38bdf8'}"></div><div><div class="tl-title">${o.numero} — ${o.descricao || ''}</div><div class="tl-meta">${o.data} · ${o.linha || ''} · ${o.responsavel} · ${statusBadge(o.status)}</div></div></div>`).join('')
+    : '<div class="empty">Nenhuma OS encontrada</div>';
+
+  const prev = await api('/api/preventivas/vencendo?dias=7');
+  document.getElementById('dash-prev').innerHTML = prev && prev.length
+    ? prev.map(p => `<div class="timeline-item"><div class="tl-dot" style="background:#22c55e"></div><div><div class="tl-title">${p.equipamento_nome} — ${p.tipo}</div><div class="tl-meta">Prevista: ${new Date(p.proxima_execucao).toLocaleDateString('pt-BR')} · ${p.responsavel_nome || '—'}</div></div></div>`).join('')
+    : '<div class="empty" style="padding:20px">Nenhuma preventiva vencendo em 7 dias ✓</div>';
+}
+
+function renderChartTipo(d) {
+  const ctx = document.getElementById('c-tipo');
+  if (!ctx) return;
+  if (charts['tipo']) charts['tipo'].destroy();
+  const labels = ['Corretiva','Preventiva','Preditiva','Melhoria'];
+  const data = [d.os_corretivas, d.os_preventivas, d.os_preditivas, d.os_melhorias];
+  const colors = ['#f97316','#38bdf8','#a78bfa','#22c55e'];
+  charts['tipo'] = new Chart(ctx, { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+  const total = data.reduce((a,b) => a+b, 0);
+  document.getElementById('leg-tipo').innerHTML = labels.map((l,i) =>
+    `<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};display:inline-block"></span>${l} ${total ? Math.round(data[i]/total*100) : 0}%</span>`
+  ).join('');
+}
+
+function renderChartLinha(d) {
+  const ctx = document.getElementById('c-linha');
+  if (!ctx) return;
+  if (charts['linha']) charts['linha'].destroy();
+  const labels = d.por_linha.map(x => x.linha.replace('Linha ', 'L').replace(' - Sachê','').replace(' - Cartucho',''));
+  const data = d.por_linha.map(x => x.total);
+  charts['linha'] = new Chart(ctx, { type: 'bar', data: { labels, datasets: [{ data, backgroundColor: '#38bdf8', borderRadius: 4, borderSkipped: false }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } } } });
+}
+
+// ── OS ───────────────────────────────────────────────────────
+async function loadOS() {
+  const search = document.getElementById('os-search').value;
+  const tipo = document.getElementById('os-tipo').value;
+  const status = document.getElementById('os-status').value;
+  let url = '/api/os/?limit=100';
+  if (search) url += '&search=' + encodeURIComponent(search);
+  if (tipo) url += '&tipo=' + encodeURIComponent(tipo);
+  if (status) url += '&status=' + encodeURIComponent(status);
+  const ordens = await api(url);
+  if (!ordens) return;
+  document.getElementById('os-table').innerHTML = ordens.length
+    ? `<table><thead><tr><th>Nº OS</th><th>Data</th><th>Equipamento</th><th>Tipo</th><th>Descrição</th><th>Responsável</th><th>Horas</th><th>Status</th><th></th></tr></thead><tbody>` +
+      ordens.map(o => `<tr><td><span class="tag">${o.numero}</span></td><td>${new Date(o.data).toLocaleDateString('pt-BR')}</td><td><strong>${o.equipamento_nome || o.linha || '—'}</strong>${o.local ? `<br><span style="font-size:11px;color:var(--muted)">${o.local}</span>` : ''}</td><td>${typeBadge(o.tipo)}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.descricao}</td><td>${o.responsavel_nome || '—'}</td><td style="font-family:var(--mono)">${o.tempo_total != null ? o.tempo_total + 'h' : '—'}</td><td>${statusBadge(o.status)}</td><td><button class="btn btn-danger btn-sm" onclick="deleteOS(${o.id})">✕</button></td></tr>`).join('') +
+      `</tbody></table>`
+    : '<div class="empty">Nenhuma OS encontrada</div>';
+}
+
+async function saveOS() {
+  const ei = document.getElementById('os-equip').value;
+  const hi = document.getElementById('os-hi').value;
+  const hf = document.getElementById('os-hf').value;
+  let tempo = null;
+  if (hi && hf) {
+    const [hh, mm] = hi.split(':').map(Number);
+    const [hh2, mm2] = hf.split(':').map(Number);
+    tempo = Math.round(((hh2*60+mm2) - (hh*60+mm)) / 60 * 100) / 100;
+  }
+  const payload = {
+    data: document.getElementById('os-data').value || new Date().toISOString(),
+    turno: document.getElementById('os-turno').value,
+    hora_inicio: hi || null, hora_fim: hf || null, tempo_total: tempo,
+    equipamento_id: ei ? parseInt(ei) : null,
+    linha: ei ? (equipList.find(e => e.id == ei)?.linha || null) : null,
+    local: document.getElementById('os-local').value || null,
+    tipo: document.getElementById('os-tipo2').value,
+    descricao: document.getElementById('os-desc').value,
+    materiais: document.getElementById('os-mat').value || null,
+    causa: document.getElementById('os-causa').value || null,
+    responsavel_id: document.getElementById('os-resp').value ? parseInt(document.getElementById('os-resp').value) : null,
+    status: document.getElementById('os-stat').value,
+    observacoes: document.getElementById('os-obs').value || null
+  };
+  try {
+    await api('/api/os/', { method: 'POST', body: JSON.stringify(payload) });
+    closeModal('m-os');
+    toast('OS criada com sucesso!');
+    loadOS();
+    loadDash();
+  } catch(e) { toast(e.message, false); }
+}
+
+async function deleteOS(id) {
+  if (!confirm('Remover esta OS?')) return;
+  try { await api('/api/os/' + id, { method: 'DELETE' }); toast('OS removida'); loadOS(); } catch(e) { toast(e.message, false); }
+}
+
+// ── AGENDA ────────────────────────────────────────────────────
+async function loadAgenda() {
+  const [planos, vencendo] = await Promise.all([api('/api/preventivas/'), api('/api/preventivas/vencendo?dias=7')]);
+  document.getElementById('prev-vencendo').textContent = vencendo?.length ? vencendo.length + ' vencendo' : '';
+
+  document.getElementById('prev-table').innerHTML = planos && planos.length
+    ? `<table><thead><tr><th>Equipamento</th><th>Tipo</th><th>Freq.</th><th>Próxima</th><th>Responsável</th><th></th></tr></thead><tbody>` +
+      planos.map(p => {
+        const dt = new Date(p.proxima_execucao);
+        const venc = dt < new Date();
+        return `<tr><td>${p.equipamento_nome || '—'}</td><td>${p.tipo}</td><td>${p.frequencia_dias}d</td><td style="color:${venc?'#ef4444':'inherit'}">${dt.toLocaleDateString('pt-BR')}</td><td>${p.responsavel_nome || '—'}</td><td><button class="btn btn-s btn-sm" onclick="executarPrev(${p.id})">✓ Executar</button></td></tr>`;
+      }).join('') + `</tbody></table>`
+    : '<div class="empty">Nenhum plano cadastrado</div>';
+
+  document.getElementById('prev-alert').innerHTML = vencendo && vencendo.length
+    ? vencendo.map(p => `<div class="timeline-item"><div class="tl-dot" style="background:#f59e0b"></div><div><div class="tl-title">${p.equipamento_nome} — ${p.tipo}</div><div class="tl-meta">${new Date(p.proxima_execucao).toLocaleDateString('pt-BR')} · ${p.responsavel_nome || '—'}</div></div></div>`).join('')
+    : '<div class="empty" style="padding:20px">Tudo em dia! Nenhuma preventiva vencendo ✓</div>';
+}
+
+async function savePrev() {
+  const payload = {
+    equipamento_id: parseInt(document.getElementById('pr-equip').value),
+    tipo: document.getElementById('pr-tipo').value,
+    frequencia_dias: parseInt(document.getElementById('pr-freq').value),
+    proxima_execucao: document.getElementById('pr-data').value,
+    responsavel_id: document.getElementById('pr-resp').value ? parseInt(document.getElementById('pr-resp').value) : null,
+    procedimento: document.getElementById('pr-proc').value || null
+  };
+  if (!payload.equipamento_id || !payload.proxima_execucao) { toast('Preencha equipamento e data', false); return; }
+  try { await api('/api/preventivas/', { method: 'POST', body: JSON.stringify(payload) }); closeModal('m-prev'); toast('Preventiva agendada!'); loadAgenda(); } catch(e) { toast(e.message, false); }
+}
+
+async function executarPrev(id) {
+  try { await api('/api/preventivas/' + id + '/executar', { method: 'POST' }); toast('Execução registrada!'); loadAgenda(); } catch(e) { toast(e.message, false); }
+}
+
+// ── EQUIPAMENTOS ──────────────────────────────────────────────
+async function loadEquip() {
+  const equips = await api('/api/equipamentos/');
+  if (!equips) return;
+  const critColors = { 'Alta': '#ef4444', 'Média': '#f59e0b', 'Baixa': '#22c55e' };
+  document.getElementById('equip-grid').innerHTML = equips.map(e => `
+    <div class="equip-card">
+      <div class="equip-card-hdr" style="background:var(--nav);">
+        <div class="equip-avatar">⚙</div>
+        <div><div style="color:#fff;font-size:14px;font-weight:600;">${e.nome}</div><div style="color:#94a3b8;font-size:12px;">${e.codigo} · ${e.linha}</div></div>
+      </div>
+      <div style="padding:12px 16px;">
+        ${e.fabricante ? `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><span style="color:var(--muted)">Fabricante</span><span>${e.fabricante}</span></div>` : ''}
+        ${e.numero_serie ? `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><span style="color:var(--muted)">Nº Série</span><span style="font-family:var(--mono)">${e.numero_serie}</span></div>` : ''}
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><span style="color:var(--muted)">Criticidade</span>${critBadge(e.criticidade)}</div>
+      </div>
+    </div>
+  `).join('') + `<div class="equip-card" style="border:1.5px dashed var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;min-height:180px;cursor:pointer;" onclick="openModal('m-equip')"><div style="font-size:28px;color:var(--muted)">+</div><div style="font-size:13px;color:var(--muted)">Cadastrar equipamento</div></div>`;
+}
+
+async function saveEquip() {
+  const payload = {
+    codigo: document.getElementById('eq-cod').value,
+    nome: document.getElementById('eq-nome').value,
+    linha: document.getElementById('eq-linha').value,
+    local: document.getElementById('eq-local').value || null,
+    fabricante: document.getElementById('eq-fab').value || null,
+    modelo: document.getElementById('eq-mod').value || null,
+    numero_serie: document.getElementById('eq-ser').value || null,
+    data_instalacao: document.getElementById('eq-dt').value || null,
+    criticidade: document.getElementById('eq-crit').value,
+    observacoes: document.getElementById('eq-obs').value || null
+  };
+  if (!payload.codigo || !payload.nome) { toast('Preencha código e nome', false); return; }
+  try { await api('/api/equipamentos/', { method: 'POST', body: JSON.stringify(payload) }); closeModal('m-equip'); toast('Equipamento cadastrado!'); loadEquip(); await loadMeta(); } catch(e) { toast(e.message, false); }
+}
+
+// ── COLABORADORES ─────────────────────────────────────────────
+async function loadColabs() {
+  const users = await api('/api/users/');
+  if (!users) return;
+  const initials = n => n.split(' ').map(x => x[0]).slice(0,2).join('').toUpperCase();
+  const colors = ['#38bdf8','#22c55e','#f97316','#a78bfa','#f59e0b'];
+  document.getElementById('colabs-table').innerHTML = `<table><thead><tr><th>Colaborador</th><th>Cargo</th><th>Especialidade</th><th>Perfil</th><th>Situação</th></tr></thead><tbody>` +
+    users.map((u, i) => `<tr><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;border-radius:50%;background:var(--nav);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:${colors[i%colors.length]}">${initials(u.nome)}</div><strong>${u.nome}</strong></div></td><td>${u.cargo || '—'}</td><td>${u.especialidade ? `<span class="badge ba">${u.especialidade}</span>` : '—'}</td><td>${roleBadge(u.role)}</td><td>${u.is_active ? '<span class="badge bg">Ativo</span>' : '<span class="badge br">Inativo</span>'}</td></tr>`).join('') +
+    `</tbody></table>`;
+}
+
+async function saveColab() {
+  const payload = {
+    nome: document.getElementById('co-nome').value,
+    email: document.getElementById('co-email').value,
+    password: document.getElementById('co-pass').value,
+    cargo: document.getElementById('co-cargo').value || null,
+    especialidade: document.getElementById('co-esp').value,
+    role: document.getElementById('co-role').value,
+    telefone: document.getElementById('co-tel').value || null,
+    matricula: document.getElementById('co-mat').value || null
+  };
+  if (!payload.nome || !payload.email || !payload.password) { toast('Nome, e-mail e senha são obrigatórios', false); return; }
+  try { await api('/api/users/', { method: 'POST', body: JSON.stringify(payload) }); closeModal('m-colab'); toast('Colaborador cadastrado!'); loadColabs(); await loadMeta(); } catch(e) { toast(e.message, false); }
+}
+
+// ── RELATÓRIOS ────────────────────────────────────────────────
+async function loadRel() {
+  const [dash, rel] = await Promise.all([api('/api/dashboard/stats'), api('/api/dashboard/relatorio')]);
+  if (!dash || !rel) return;
+
+  const mttr = rel.resumo.mttr_horas;
+  document.getElementById('rel-kpis').innerHTML = [
+    ['MTTR', mttr + 'h', '#f97316', 'Tempo médio de reparo'],
+    ['Taxa de conclusão', rel.resumo.taxa_conclusao + '%', '#22c55e', 'OS concluídas'],
+    ['Tempo total', rel.resumo.tempo_total_horas + 'h', '#38bdf8', 'Horas trabalhadas'],
+    ['Total OS', rel.resumo.total_os, '#a78bfa', 'Todas as ordens'],
+  ].map(([l,v,c,s]) => `<div class="mc"><div class="mc-accent" style="background:${c}"></div><div class="mc-lbl">${l}</div><div class="mc-val" style="color:${c}">${v}</div><div class="mc-sub">${s}</div></div>`).join('');
+
+  const mCtx = document.getElementById('c-mes');
+  if (mCtx) {
+    if (charts['mes']) charts['mes'].destroy();
+    charts['mes'] = new Chart(mCtx, { type: 'bar', data: { labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], datasets: [{ data: dash.por_mes.map(x => x.total), backgroundColor: dash.por_mes.map((x,i) => i === new Date().getMonth() ? '#f97316' : '#38bdf8'), borderRadius: 4, borderSkipped: false }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } } } });
+  }
+  const rCtx = document.getElementById('c-resp');
+  if (rCtx && rel.por_responsavel.length) {
+    if (charts['resp']) charts['resp'].destroy();
+    charts['resp'] = new Chart(rCtx, { type: 'bar', data: { labels: rel.por_responsavel.map(x => x.nome.split(' ')[0]), datasets: [{ data: rel.por_responsavel.map(x => Math.round(x.horas * 10) / 10), backgroundColor: ['#38bdf8','#22c55e','#f97316','#a78bfa'], borderRadius: 4, borderSkipped: false }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } } });
+  }
+
+  document.getElementById('rel-table').innerHTML = rel.ordens.length
+    ? `<table><thead><tr><th>OS</th><th>Data</th><th>Linha</th><th>Tipo</th><th>Responsável</th><th>Horas</th><th>Materiais</th><th>Status</th></tr></thead><tbody>` +
+      rel.ordens.map(o => `<tr><td><span class="tag">${o.numero}</span></td><td>${o.data}</td><td>${o.linha || '—'}</td><td>${typeBadge(o.tipo)}</td><td>${o.responsavel}</td><td style="font-family:var(--mono)">${o.tempo != null ? o.tempo + 'h' : '—'}</td><td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.materiais || '—'}</td><td>${statusBadge(o.status)}</td></tr>`).join('') +
+      `</tbody></table>`
+    : '<div class="empty">Nenhuma OS encontrada</div>';
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+if (TOKEN && USER) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'flex';
+  document.getElementById('nav-nome').textContent = USER.nome.split(' ')[0];
+  loadMeta().then(() => loadDash());
+}
+
+document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: pcm-sistema
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pcm-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+
+databases:
+  - name: pcm-db
+    databaseName: pcm_production
+    user: pcm_user
+    plan: free
