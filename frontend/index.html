@@ -313,7 +313,14 @@ async function doLogin() {
   const err = document.getElementById('login-error');
   err.style.display = 'none';
   try {
-    const data = await api('/api/auth/token', { method: 'POST', body: JSON.stringify({ email, password: pass }) });
+    const res = await fetch('/api/auth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'E-mail ou senha incorretos');
+    if (!data || !data.access_token) throw new Error('Resposta invalida do servidor');
     TOKEN = data.access_token;
     USER = data.user;
     localStorage.setItem('pcm_token', TOKEN);
