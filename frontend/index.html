@@ -319,6 +319,19 @@ textarea{resize:vertical;min-height:70px;}
   </div>
 </div>
 
+<div class="modal-ov" id="m-edit-equip">
+  <div class="modal">
+    <div class="modal-hdr"><span class="modal-title">Editar Equipamento</span><button class="close-btn" onclick="closeModal('m-edit-equip')">×</button></div>
+    <input type="hidden" id="eeq-id"/>
+    <div class="form-grid"><div class="field"><label>Código</label><input id="eeq-cod" readonly style="opacity:0.6"/></div><div class="field"><label>Nome</label><input id="eeq-nome"/></div></div>
+    <div class="form-grid"><div class="field"><label>Linha / Área</label><select id="eeq-linha"><option>Linha 1 - Sachê</option><option>Linha 2 - Sachê</option><option>Linha 3 - Sachê</option><option>Linha 4 - Sachê</option><option>Linha 5 - Cartucho</option><option>Área Geral</option></select></div><div class="field"><label>Localização</label><input id="eeq-local"/></div></div>
+    <div class="form-grid g3"><div class="field"><label>Fabricante</label><input id="eeq-fab"/></div><div class="field"><label>Modelo</label><input id="eeq-mod"/></div><div class="field"><label>Nº Série</label><input id="eeq-ser" style="font-family:var(--mono)"/></div></div>
+    <div class="form-grid"><div class="field"><label>Criticidade</label><select id="eeq-crit"><option>Alta</option><option>Média</option><option>Baixa</option></select></div><div class="field"><label>Data Instalação</label><input type="date" id="eeq-dt"/></div></div>
+    <div class="form-grid g1"><div class="field full"><label>Observações</label><textarea id="eeq-obs"></textarea></div></div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-edit-equip')">Cancelar</button><button class="btn btn-p" onclick="saveEditEquip()">Salvar</button></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><span id="toast-txt"></span></div>
 
 <script>
@@ -589,17 +602,21 @@ async function executarPrev(id) {
 async function loadEquip() {
   const equips = await api('/api/equipamentos/');
   if (!equips) return;
-  const critColors = { 'Alta': '#ef4444', 'Média': '#f59e0b', 'Baixa': '#22c55e' };
   document.getElementById('equip-grid').innerHTML = equips.map(e => `
     <div class="equip-card">
       <div class="equip-card-hdr" style="background:var(--nav);">
         <div class="equip-avatar">⚙</div>
-        <div><div style="color:#fff;font-size:14px;font-weight:600;">${e.nome}</div><div style="color:#94a3b8;font-size:12px;">${e.codigo} · ${e.linha}</div></div>
+        <div style="flex:1"><div style="color:#fff;font-size:14px;font-weight:600;">${e.nome}</div><div style="color:#94a3b8;font-size:12px;">${e.codigo} · ${e.linha}</div></div>
       </div>
       <div style="padding:12px 16px;">
         ${e.fabricante ? `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><span style="color:var(--muted)">Fabricante</span><span>${e.fabricante}</span></div>` : ''}
         ${e.numero_serie ? `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><span style="color:var(--muted)">Nº Série</span><span style="font-family:var(--mono)">${e.numero_serie}</span></div>` : ''}
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><span style="color:var(--muted)">Criticidade</span>${critBadge(e.criticidade)}</div>
+        ${e.local ? `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><span style="color:var(--muted)">Local</span><span>${e.local}</span></div>` : ''}
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px;"><span style="color:var(--muted)">Criticidade</span>${critBadge(e.criticidade)}</div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-s btn-sm" style="flex:1" onclick="editEquip(${e.id})">✏ Editar</button>
+          <button class="btn btn-danger btn-sm" style="flex:1" onclick="deleteEquip(${e.id},'${e.nome.replace(/'/g,"\'")}')">✕ Excluir</button>
+        </div>
       </div>
     </div>
   `).join('') + `<div class="equip-card" style="border:1.5px dashed var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;min-height:180px;cursor:pointer;" onclick="openModal('m-equip')"><div style="font-size:28px;color:var(--muted)">+</div><div style="font-size:13px;color:var(--muted)">Cadastrar equipamento</div></div>`;
@@ -620,6 +637,55 @@ async function saveEquip() {
   };
   if (!payload.codigo || !payload.nome) { toast('Preencha código e nome', false); return; }
   try { await api('/api/equipamentos/', { method: 'POST', body: JSON.stringify(payload) }); closeModal('m-equip'); toast('Equipamento cadastrado!'); loadEquip(); await loadMeta(); } catch(e) { toast(e.message, false); }
+}
+
+async function editEquip(id) {
+  const e = await api('/api/equipamentos/' + id);
+  if (!e) return;
+  document.getElementById('eeq-id').value = e.id;
+  document.getElementById('eeq-cod').value = e.codigo;
+  document.getElementById('eeq-nome').value = e.nome;
+  document.getElementById('eeq-linha').value = e.linha;
+  document.getElementById('eeq-local').value = e.local || '';
+  document.getElementById('eeq-fab').value = e.fabricante || '';
+  document.getElementById('eeq-mod').value = e.modelo || '';
+  document.getElementById('eeq-ser').value = e.numero_serie || '';
+  document.getElementById('eeq-crit').value = e.criticidade;
+  document.getElementById('eeq-obs').value = e.observacoes || '';
+  document.getElementById('eeq-dt').value = e.data_instalacao ? e.data_instalacao.split('T')[0] : '';
+  openModal('m-edit-equip');
+}
+
+async function saveEditEquip() {
+  const id = document.getElementById('eeq-id').value;
+  const payload = {
+    nome: document.getElementById('eeq-nome').value,
+    linha: document.getElementById('eeq-linha').value,
+    local: document.getElementById('eeq-local').value || null,
+    fabricante: document.getElementById('eeq-fab').value || null,
+    modelo: document.getElementById('eeq-mod').value || null,
+    numero_serie: document.getElementById('eeq-ser').value || null,
+    criticidade: document.getElementById('eeq-crit').value,
+    observacoes: document.getElementById('eeq-obs').value || null,
+    data_instalacao: document.getElementById('eeq-dt').value || null
+  };
+  try {
+    await api('/api/equipamentos/' + id, { method: 'PUT', body: JSON.stringify(payload) });
+    closeModal('m-edit-equip');
+    toast('Equipamento atualizado!');
+    loadEquip();
+    await loadMeta();
+  } catch(e) { toast(e.message, false); }
+}
+
+async function deleteEquip(id, nome) {
+  if (!confirm('Excluir o equipamento "' + nome + '"? Esta ação não pode ser desfeita.')) return;
+  try {
+    await api('/api/equipamentos/' + id, { method: 'DELETE' });
+    toast(nome + ' excluído');
+    loadEquip();
+    await loadMeta();
+  } catch(e) { toast(e.message, false); }
 }
 
 // ── COLABORADORES ─────────────────────────────────────────────
