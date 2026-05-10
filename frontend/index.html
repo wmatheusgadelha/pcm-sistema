@@ -158,6 +158,7 @@ textarea{resize:vertical;min-height:70px;}
     <button class="nav-btn" onclick="nav('equip',this)">⊞ Equipamentos</button>
     <button class="nav-btn" onclick="nav('colabs',this)">◉ Colaboradores</button>
     <button class="nav-btn" onclick="nav('rel',this)">⊟ Relatórios</button>
+    <button class="nav-btn" onclick="nav('config',this)">⚙ Configurações</button>
     <div class="nav-spacer"></div>
     <div class="nav-user"><span class="nav-user-name" id="nav-nome">—</span><button class="nav-logout" onclick="openContaModal()" style="margin-right:6px">⚙ Minha Conta</button><button class="nav-logout" onclick="logout()">Sair</button></div>
   </nav>
@@ -237,6 +238,55 @@ textarea{resize:vertical;min-height:70px;}
       <div class="card"><div class="card-hdr"><span class="card-title">Histórico Completo</span></div><div class="table-wrap"><div id="rel-table"><div class="loading">Carregando...</div></div></div></div>
     </div>
 
+    <!-- CONFIGURAÇÕES -->
+    <div id="s-config" class="screen">
+      <div class="page-hdr">
+        <div><div class="page-title">Configurações</div><div class="page-sub">Gerencie linhas, áreas e parâmetros do sistema</div></div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+            <span class="card-title">Linhas e Áreas</span>
+            <button class="btn btn-p btn-sm" onclick="openNovaLinha()">+ Adicionar</button>
+          </div>
+          <div id="linhas-list" style="padding:8px 0;"></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Informações do Sistema</span></div>
+          <div style="padding:16px;font-size:13px;color:var(--muted);line-height:2;">
+            <div style="display:flex;justify-content:space-between;border-bottom:0.5px solid var(--border);padding-bottom:8px;margin-bottom:8px;"><span>Versão</span><span style="color:var(--text);font-weight:500">PCM v2.0</span></div>
+            <div style="display:flex;justify-content:space-between;border-bottom:0.5px solid var(--border);padding-bottom:8px;margin-bottom:8px;"><span>Usuário logado</span><span id="cfg-user" style="color:var(--text);font-weight:500">—</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>Perfil</span><span id="cfg-role" style="color:var(--text);font-weight:500">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- removido bloco duplicado -->
+<div id="s-config" class="screen" style="display:none">
+  <div class="page-hdr">
+    <div><div class="page-title">Configurações</div><div class="page-sub">Gerencie linhas, áreas e parâmetros do sistema</div></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+        <span class="card-title">Linhas e Áreas</span>
+        <button class="btn btn-p btn-sm" onclick="openModal('m-nova-linha')">+ Adicionar</button>
+      </div>
+      <div id="linhas-list" style="padding:8px 0;"></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Informações do Sistema</span></div>
+      <div style="padding:16px;font-size:13px;color:var(--muted);line-height:2;">
+        <div style="display:flex;justify-content:space-between;border-bottom:0.5px solid var(--border);padding-bottom:8px;margin-bottom:8px;"><span>Versão</span><span style="color:var(--text);font-weight:500">PCM v2.0</span></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:0.5px solid var(--border);padding-bottom:8px;margin-bottom:8px;"><span>Empresa</span><span style="color:var(--text);font-weight:500">Qualimpel Indústria Química</span></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:0.5px solid var(--border);padding-bottom:8px;margin-bottom:8px;"><span>Usuário logado</span><span id="cfg-user" style="color:var(--text);font-weight:500">—</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>Perfil</span><span id="cfg-role" style="color:var(--text);font-weight:500">—</span></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -269,7 +319,7 @@ textarea{resize:vertical;min-height:70px;}
   <div class="modal">
     <div class="modal-hdr"><span class="modal-title">Cadastrar Equipamento</span><button class="close-btn" onclick="closeModal('m-equip')">×</button></div>
     <div class="form-grid"><div class="field"><label>Código</label><input id="eq-cod" placeholder="EQ-006"/></div><div class="field"><label>Nome</label><input id="eq-nome" placeholder="Ex: Dosador Volumétrico"/></div></div>
-    <div class="form-grid"><div class="field"><label>Linha / Área</label><select id="eq-linha"><option>Linha 1 - Sachê</option><option>Linha 2 - Sachê</option><option>Linha 3 - Sachê</option><option>Linha 4 - Sachê</option><option>Linha 5 - Cartucho</option><option>Área Geral</option></select></div><div class="field"><label>Localização</label><input id="eq-local" placeholder="Ex: Setor A"/></div></div>
+    <div class="form-grid"><div class="field"><label>Linha / Área</label><select id="eq-linha"></select></div><div class="field"><label>Localização</label><input id="eq-local" placeholder="Ex: Setor A"/></div></div>
     <div class="form-grid g3"><div class="field"><label>Fabricante</label><input id="eq-fab"/></div><div class="field"><label>Modelo</label><input id="eq-mod"/></div><div class="field"><label>Nº Série</label><input id="eq-ser" style="font-family:var(--mono)"/></div></div>
     <div class="form-grid"><div class="field"><label>Data Instalação</label><input type="date" id="eq-dt"/></div><div class="field"><label>Criticidade</label><select id="eq-crit"><option>Alta</option><option>Média</option><option>Baixa</option></select></div></div>
     <div class="form-grid g1"><div class="field full"><label>Observações</label><textarea id="eq-obs"></textarea></div></div>
@@ -319,12 +369,23 @@ textarea{resize:vertical;min-height:70px;}
   </div>
 </div>
 
+<div class="modal-ov" id="m-nova-linha">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-hdr"><span class="modal-title" id="linha-modal-title">Nova Linha / Área</span><button class="close-btn" onclick="closeModal('m-nova-linha')">×</button></div>
+    <input type="hidden" id="linha-edit-idx"/>
+    <div class="form-grid g1" style="padding:18px;gap:12px;">
+      <div class="field"><label>Nome da Linha / Área</label><input id="linha-nome" placeholder="Ex: Linha 6 - Sachê"/></div>
+    </div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-nova-linha')">Cancelar</button><button class="btn btn-p" onclick="salvarLinha()">Salvar</button></div>
+  </div>
+</div>
+
 <div class="modal-ov" id="m-edit-equip">
   <div class="modal">
     <div class="modal-hdr"><span class="modal-title">Editar Equipamento</span><button class="close-btn" onclick="closeModal('m-edit-equip')">×</button></div>
     <input type="hidden" id="eeq-id"/>
     <div class="form-grid"><div class="field"><label>Código</label><input id="eeq-cod" readonly style="opacity:0.6"/></div><div class="field"><label>Nome</label><input id="eeq-nome"/></div></div>
-    <div class="form-grid"><div class="field"><label>Linha / Área</label><select id="eeq-linha"><option>Linha 1 - Sachê</option><option>Linha 2 - Sachê</option><option>Linha 3 - Sachê</option><option>Linha 4 - Sachê</option><option>Linha 5 - Cartucho</option><option>Área Geral</option></select></div><div class="field"><label>Localização</label><input id="eeq-local"/></div></div>
+    <div class="form-grid"><div class="field"><label>Linha / Área</label><select id="eeq-linha"></select></div><div class="field"><label>Localização</label><input id="eeq-local"/></div></div>
     <div class="form-grid g3"><div class="field"><label>Fabricante</label><input id="eeq-fab"/></div><div class="field"><label>Modelo</label><input id="eeq-mod"/></div><div class="field"><label>Nº Série</label><input id="eeq-ser" style="font-family:var(--mono)"/></div></div>
     <div class="form-grid"><div class="field"><label>Criticidade</label><select id="eeq-crit"><option>Alta</option><option>Média</option><option>Baixa</option></select></div><div class="field"><label>Data Instalação</label><input type="date" id="eeq-dt"/></div></div>
     <div class="form-grid g1"><div class="field full"><label>Observações</label><textarea id="eeq-obs"></textarea></div></div>
@@ -408,6 +469,7 @@ async function loadMeta() {
   };
   fillEquip('os-equip'); fillEquip('pr-equip');
   fillUser('os-resp'); fillUser('pr-resp');
+  populateLinhasSelects();
 }
 
 function nav(id, btn) {
@@ -415,7 +477,7 @@ function nav(id, btn) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('s-' + id).classList.add('active');
   btn.classList.add('active');
-  const loaders = { os: loadOS, agenda: loadAgenda, equip: loadEquip, colabs: loadColabs, rel: loadRel };
+  const loaders = { os: loadOS, agenda: loadAgenda, equip: loadEquip, colabs: loadColabs, rel: loadRel, config: loadConfig };
   if (loaders[id]) loaders[id]();
 }
 
@@ -816,12 +878,97 @@ async function deactivateUser(id, nome) {
   } catch(e) { toast(e.message, false); }
 }
 
+// ── CONFIGURAÇÕES ─────────────────────────────────────────────
+const LINHAS_DEFAULT = ['Linha 1 - Sachê','Linha 2 - Sachê','Linha 3 - Sachê','Linha 4 - Sachê','Linha 5 - Cartucho','Área Geral'];
+
+function getLinhas() {
+  try { return JSON.parse(localStorage.getItem('pcm_linhas') || 'null') || LINHAS_DEFAULT; } 
+  catch { return LINHAS_DEFAULT; }
+}
+
+function saveLinhas(linhas) {
+  localStorage.setItem('pcm_linhas', JSON.stringify(linhas));
+}
+
+function getLinhasOptions() {
+  return getLinhas().map(l => `<option value="${l}">${l}</option>`).join('');
+}
+
+function populateLinhasSelects() {
+  const opts = getLinhasOptions();
+  ['os-equip-linha','eq-linha','eeq-linha'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = opts;
+  });
+}
+
+function loadConfig() {
+  const linhas = getLinhas();
+  document.getElementById('cfg-user').textContent = USER ? USER.nome : '—';
+  document.getElementById('cfg-role').textContent = USER ? USER.role : '—';
+  document.getElementById('linhas-list').innerHTML = linhas.length
+    ? linhas.map((l, i) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:0.5px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;"></span>
+          <span style="font-size:13px;">${l}</span>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-s btn-sm" onclick="editLinha(${i})">✏</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteLinha(${i})">✕</button>
+        </div>
+      </div>`).join('')
+    : '<div class="empty" style="padding:20px">Nenhuma linha cadastrada</div>';
+}
+
+function editLinha(idx) {
+  const linhas = getLinhas();
+  document.getElementById('linha-modal-title').textContent = 'Editar Linha / Área';
+  document.getElementById('linha-edit-idx').value = idx;
+  document.getElementById('linha-nome').value = linhas[idx];
+  openModal('m-nova-linha');
+}
+
+function deleteLinha(idx) {
+  const linhas = getLinhas();
+  if (!confirm('Excluir "' + linhas[idx] + '"?')) return;
+  linhas.splice(idx, 1);
+  saveLinhas(linhas);
+  loadConfig();
+  populateLinhasSelects();
+  toast('Linha removida');
+}
+
+function salvarLinha() {
+  const nome = document.getElementById('linha-nome').value.trim();
+  if (!nome) { toast('Digite o nome da linha', false); return; }
+  const linhas = getLinhas();
+  const idx = document.getElementById('linha-edit-idx').value;
+  if (idx !== '') {
+    linhas[parseInt(idx)] = nome;
+  } else {
+    linhas.push(nome);
+  }
+  saveLinhas(linhas);
+  closeModal('m-nova-linha');
+  loadConfig();
+  populateLinhasSelects();
+  toast('Linha salva!');
+}
+
+function openNovaLinha() {
+  document.getElementById('linha-modal-title').textContent = 'Nova Linha / Área';
+  document.getElementById('linha-edit-idx').value = '';
+  document.getElementById('linha-nome').value = '';
+  openModal('m-nova-linha');
+}
+
 // ── INIT ──────────────────────────────────────────────────────
 if (TOKEN && USER) {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-screen').style.display = 'flex';
   document.getElementById('nav-nome').textContent = USER.nome.split(' ')[0];
-  loadMeta().then(() => loadDash());
+  loadMeta().then(() => { loadDash(); populateLinhasSelects(); });
 }
 
 document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
