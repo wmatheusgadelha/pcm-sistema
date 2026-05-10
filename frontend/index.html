@@ -159,7 +159,7 @@ textarea{resize:vertical;min-height:70px;}
     <button class="nav-btn" onclick="nav('colabs',this)">◉ Colaboradores</button>
     <button class="nav-btn" onclick="nav('rel',this)">⊟ Relatórios</button>
     <div class="nav-spacer"></div>
-    <div class="nav-user"><span class="nav-user-name" id="nav-nome">—</span><button class="nav-logout" onclick="logout()">Sair</button></div>
+    <div class="nav-user"><span class="nav-user-name" id="nav-nome">—</span><button class="nav-logout" onclick="openContaModal()" style="margin-right:6px">⚙ Minha Conta</button><button class="nav-logout" onclick="logout()">Sair</button></div>
   </nav>
   <div class="content">
 
@@ -285,6 +285,37 @@ textarea{resize:vertical;min-height:70px;}
     <div class="form-grid g3"><div class="field"><label>Cargo</label><input id="co-cargo" placeholder="Ex: Mecânico Sênior"/></div><div class="field"><label>Especialidade</label><select id="co-esp"><option>Mecânica</option><option>Elétrica</option><option>Eletromecânica</option><option>Instrumentação</option><option>Hidráulica</option><option>Pneumática</option></select></div><div class="field"><label>Perfil</label><select id="co-role"><option value="tecnico">Técnico</option><option value="gestor">Gestor</option><option value="admin">Admin</option></select></div></div>
     <div class="form-grid g1"><div class="field full"><label>Telefone</label><input id="co-tel" placeholder="(XX) XXXXX-XXXX"/></div></div>
     <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-colab')">Cancelar</button><button class="btn btn-p" onclick="saveColab()">Cadastrar</button></div>
+  </div>
+</div>
+
+<div class="modal-ov" id="m-conta">
+  <div class="modal">
+    <div class="modal-hdr"><span class="modal-title">⚙ Minha Conta</span><button class="close-btn" onclick="closeModal('m-conta')">×</button></div>
+    <div style="padding:18px;border-bottom:0.5px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;">
+        <div id="conta-avatar" style="width:48px;height:48px;border-radius:50%;background:var(--nav);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:#38bdf8;flex-shrink:0;"></div>
+        <div><div id="conta-nome" style="font-size:16px;font-weight:600;"></div><div id="conta-email" style="font-size:13px;color:var(--muted);"></div><div id="conta-role" style="margin-top:4px;"></div></div>
+      </div>
+    </div>
+    <div style="padding:18px;border-bottom:0.5px solid var(--border);">
+      <div style="font-size:13px;font-weight:600;margin-bottom:14px;">Alterar Senha</div>
+      <div class="form-grid g1" style="padding:0;gap:10px;">
+        <div class="field"><label>Senha Atual</label><input type="password" id="senha-atual" placeholder="Digite sua senha atual"/></div>
+        <div class="field"><label>Nova Senha</label><input type="password" id="senha-nova" placeholder="Mínimo 6 caracteres"/></div>
+        <div class="field"><label>Confirmar Nova Senha</label><input type="password" id="senha-conf" placeholder="Repita a nova senha"/></div>
+      </div>
+    </div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-conta')">Fechar</button><button class="btn btn-p" onclick="salvarSenha()">Salvar Nova Senha</button></div>
+  </div>
+</div>
+
+<div class="modal-ov" id="m-edit-user">
+  <div class="modal">
+    <div class="modal-hdr"><span class="modal-title">Editar Colaborador</span><button class="close-btn" onclick="closeModal('m-edit-user')">×</button></div>
+    <input type="hidden" id="edit-user-id"/>
+    <div class="form-grid"><div class="field"><label>Nome completo</label><input id="edit-nome"/></div><div class="field"><label>Cargo</label><input id="edit-cargo"/></div></div>
+    <div class="form-grid g3"><div class="field"><label>Especialidade</label><select id="edit-esp"><option>Mecânica</option><option>Elétrica</option><option>Eletromecânica</option><option>Instrumentação</option><option>Hidráulica</option><option>Pneumática</option></select></div><div class="field"><label>Perfil</label><select id="edit-role"><option value="tecnico">Técnico</option><option value="gestor">Gestor</option><option value="admin">Admin</option></select></div><div class="field"><label>Telefone</label><input id="edit-tel"/></div></div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-edit-user')">Cancelar</button><button class="btn btn-p" onclick="saveEditUser()">Salvar</button></div>
   </div>
 </div>
 
@@ -597,8 +628,8 @@ async function loadColabs() {
   if (!users) return;
   const initials = n => n.split(' ').map(x => x[0]).slice(0,2).join('').toUpperCase();
   const colors = ['#38bdf8','#22c55e','#f97316','#a78bfa','#f59e0b'];
-  document.getElementById('colabs-table').innerHTML = `<table><thead><tr><th>Colaborador</th><th>Cargo</th><th>Especialidade</th><th>Perfil</th><th>Situação</th></tr></thead><tbody>` +
-    users.map((u, i) => `<tr><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;border-radius:50%;background:var(--nav);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:${colors[i%colors.length]}">${initials(u.nome)}</div><strong>${u.nome}</strong></div></td><td>${u.cargo || '—'}</td><td>${u.especialidade ? `<span class="badge ba">${u.especialidade}</span>` : '—'}</td><td>${roleBadge(u.role)}</td><td>${u.is_active ? '<span class="badge bg">Ativo</span>' : '<span class="badge br">Inativo</span>'}</td></tr>`).join('') +
+  document.getElementById('colabs-table').innerHTML = `<table><thead><tr><th>Colaborador</th><th>Cargo</th><th>Especialidade</th><th>Perfil</th><th>Situação</th><th>Ações</th></tr></thead><tbody>` +
+    users.map((u, i) => `<tr><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;border-radius:50%;background:var(--nav);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:${colors[i%colors.length]}">${initials(u.nome)}</div><div><strong>${u.nome}</strong><div style="font-size:11px;color:var(--muted)">${u.email}</div></div></div></td><td>${u.cargo || '—'}</td><td>${u.especialidade ? `<span class="badge ba">${u.especialidade}</span>` : '—'}</td><td>${roleBadge(u.role)}</td><td>${u.is_active ? '<span class="badge bg">Ativo</span>' : '<span class="badge br">Inativo</span>'}</td><td style="display:flex;gap:6px;"><button class="btn btn-s btn-sm" onclick="editUser(${u.id},'${u.nome}','${u.cargo||''}','${u.especialidade||'Mecânica'}','${u.role}','${u.telefone||''}')">✏ Editar</button>${u.id !== USER.id ? `<button class="btn btn-danger btn-sm" onclick="deactivateUser(${u.id},'${u.nome}')">${u.is_active ? '✕ Desativar' : '✓ Ativar'}</button>` : ''}</td></tr>`).join('') +
     `</tbody></table>`;
 }
 
@@ -646,6 +677,77 @@ async function loadRel() {
       rel.ordens.map(o => `<tr><td><span class="tag">${o.numero}</span></td><td>${o.data}</td><td>${o.linha || '—'}</td><td>${typeBadge(o.tipo)}</td><td>${o.responsavel}</td><td style="font-family:var(--mono)">${o.tempo != null ? o.tempo + 'h' : '—'}</td><td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.materiais || '—'}</td><td>${statusBadge(o.status)}</td></tr>`).join('') +
       `</tbody></table>`
     : '<div class="empty">Nenhuma OS encontrada</div>';
+}
+
+// ── MINHA CONTA ───────────────────────────────────────────────
+function openContaModal() {
+  if (!USER) return;
+  const initials = USER.nome.split(' ').map(x => x[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('conta-avatar').textContent = initials;
+  document.getElementById('conta-nome').textContent = USER.nome;
+  document.getElementById('conta-email').textContent = USER.email;
+  document.getElementById('conta-role').innerHTML = roleBadge(USER.role);
+  document.getElementById('senha-atual').value = '';
+  document.getElementById('senha-nova').value = '';
+  document.getElementById('senha-conf').value = '';
+  openModal('m-conta');
+}
+
+async function salvarSenha() {
+  const atual = document.getElementById('senha-atual').value;
+  const nova = document.getElementById('senha-nova').value;
+  const conf = document.getElementById('senha-conf').value;
+  if (!atual || !nova || !conf) { toast('Preencha todos os campos', false); return; }
+  if (nova.length < 6) { toast('Nova senha deve ter pelo menos 6 caracteres', false); return; }
+  if (nova !== conf) { toast('As senhas não coincidem', false); return; }
+  try {
+    const res = await fetch('/api/auth/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
+      body: JSON.stringify({ senha_atual: atual, nova_senha: nova })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Erro ao alterar senha');
+    closeModal('m-conta');
+    toast('Senha alterada com sucesso!');
+  } catch(e) { toast(e.message, false); }
+}
+
+function editUser(id, nome, cargo, esp, role, tel) {
+  document.getElementById('edit-user-id').value = id;
+  document.getElementById('edit-nome').value = nome;
+  document.getElementById('edit-cargo').value = cargo;
+  document.getElementById('edit-esp').value = esp;
+  document.getElementById('edit-role').value = role;
+  document.getElementById('edit-tel').value = tel;
+  openModal('m-edit-user');
+}
+
+async function saveEditUser() {
+  const id = document.getElementById('edit-user-id').value;
+  const payload = {
+    nome: document.getElementById('edit-nome').value,
+    cargo: document.getElementById('edit-cargo').value || null,
+    especialidade: document.getElementById('edit-esp').value,
+    role: document.getElementById('edit-role').value,
+    telefone: document.getElementById('edit-tel').value || null
+  };
+  try {
+    await api('/api/users/' + id, { method: 'PUT', body: JSON.stringify(payload) });
+    closeModal('m-edit-user');
+    toast('Colaborador atualizado!');
+    loadColabs();
+    await loadMeta();
+  } catch(e) { toast(e.message, false); }
+}
+
+async function deactivateUser(id, nome) {
+  if (!confirm(`Desativar ${nome}?`)) return;
+  try {
+    await api('/api/users/' + id, { method: 'DELETE' });
+    toast(nome + ' desativado');
+    loadColabs();
+  } catch(e) { toast(e.message, false); }
 }
 
 // ── INIT ──────────────────────────────────────────────────────

@@ -48,3 +48,26 @@ def register_first_admin(data: UserCreate, db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Erro ao criar usuário: {str(e)}")
+
+@router.post("/change-password")
+def change_password(
+    data: dict,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    try:
+        senha_atual = data.get("senha_atual", "")
+        nova_senha = data.get("nova_senha", "")
+        if not senha_atual or not nova_senha:
+            raise HTTPException(status_code=400, detail="Preencha todos os campos")
+        if len(nova_senha) < 6:
+            raise HTTPException(status_code=400, detail="Nova senha deve ter pelo menos 6 caracteres")
+        if not verify_password(senha_atual, current_user.hashed_password):
+            raise HTTPException(status_code=401, detail="Senha atual incorreta")
+        current_user.hashed_password = get_password_hash(nova_senha)
+        db.commit()
+        return {"message": "Senha alterada com sucesso"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
