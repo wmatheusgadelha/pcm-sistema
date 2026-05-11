@@ -199,7 +199,7 @@ textarea{resize:vertical;min-height:70px;}
     <div id="s-agenda" class="screen">
       <div class="page-hdr">
         <div><div class="page-title">Programação de Manutenções</div><div class="page-sub">Plano de manutenção preventiva</div></div>
-        <button class="btn btn-p" onclick="openModal('m-prev')">+ Agendar</button>
+        <button class="btn btn-p" onclick="openNovaPrev()">+ Agendar</button>
       </div>
       <div class="two-col">
         <div class="card"><div class="card-hdr"><span class="card-title">Plano de Preventivas</span><span id="prev-vencendo" class="badge ba"></span></div><div id="prev-table"><div class="loading">Carregando...</div></div></div>
@@ -307,11 +307,12 @@ textarea{resize:vertical;min-height:70px;}
 
 <div class="modal-ov" id="m-prev">
   <div class="modal">
-    <div class="modal-hdr"><span class="modal-title">Agendar Preventiva</span><button class="close-btn" onclick="closeModal('m-prev')">×</button></div>
+    <div class="modal-hdr"><span class="modal-title" id="prev-modal-title">Agendar Preventiva</span><button class="close-btn" onclick="closeModal('m-prev')">×</button></div>
+    <input type="hidden" id="pr-id"/>
     <div class="form-grid"><div class="field"><label>Equipamento</label><select id="pr-equip"></select></div><div class="field"><label>Tipo</label><select id="pr-tipo"><option>Preventiva</option><option>Preditiva</option><option>Lubrificação</option><option>Inspeção</option><option>Calibração</option></select></div></div>
     <div class="form-grid g3"><div class="field"><label>Data prevista</label><input type="date" id="pr-data"/></div><div class="field"><label>Frequência (dias)</label><input type="number" id="pr-freq" value="30" min="1"/></div><div class="field"><label>Responsável</label><select id="pr-resp"></select></div></div>
     <div class="form-grid g1"><div class="field full"><label>Procedimento</label><textarea id="pr-proc" placeholder="Descreva o procedimento..."></textarea></div></div>
-    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-prev')">Cancelar</button><button class="btn btn-p" onclick="savePrev()">Agendar</button></div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-prev')">Cancelar</button><button class="btn btn-p" id="prev-save-btn" onclick="savePrev()">Agendar</button></div>
   </div>
 </div>
 
@@ -630,11 +631,11 @@ async function loadAgenda() {
   document.getElementById('prev-vencendo').textContent = vencendo?.length ? vencendo.length + ' vencendo' : '';
 
   document.getElementById('prev-table').innerHTML = planos && planos.length
-    ? `<table><thead><tr><th>Equipamento</th><th>Tipo</th><th>Freq.</th><th>Próxima</th><th>Responsável</th><th></th></tr></thead><tbody>` +
+    ? `<table><thead><tr><th>Equipamento</th><th>Tipo</th><th>Freq.</th><th>Próxima</th><th>Responsável</th><th>Ações</th></tr></thead><tbody>` +
       planos.map(p => {
         const dt = new Date(p.proxima_execucao);
         const venc = dt < new Date();
-        return `<tr><td>${p.equipamento_nome || '—'}</td><td>${p.tipo}</td><td>${p.frequencia_dias}d</td><td style="color:${venc?'#ef4444':'inherit'}">${dt.toLocaleDateString('pt-BR')}</td><td>${p.responsavel_nome || '—'}</td><td><button class="btn btn-s btn-sm" onclick="executarPrev(${p.id})">✓ Executar</button></td></tr>`;
+        return `<tr><td>${p.equipamento_nome || '—'}</td><td>${p.tipo}</td><td>${p.frequencia_dias}d</td><td style="color:${venc?'#ef4444':'inherit'}">${dt.toLocaleDateString('pt-BR')}</td><td>${p.responsavel_nome || '—'}</td><td style="display:flex;gap:5px;"><button class="btn btn-s btn-sm" onclick="executarPrev(${p.id})">✓ Executar</button><button class="btn btn-s btn-sm" onclick="editPrev(${p.id})">✏ Editar</button><button class="btn btn-danger btn-sm" onclick="deletePrev(${p.id})">✕</button></td></tr>`;
       }).join('') + `</tbody></table>`
     : '<div class="empty">Nenhum plano cadastrado</div>';
 
@@ -644,6 +645,7 @@ async function loadAgenda() {
 }
 
 async function savePrev() {
+  const id = document.getElementById('pr-id').value;
   const payload = {
     equipamento_id: parseInt(document.getElementById('pr-equip').value),
     tipo: document.getElementById('pr-tipo').value,
@@ -653,11 +655,56 @@ async function savePrev() {
     procedimento: document.getElementById('pr-proc').value || null
   };
   if (!payload.equipamento_id || !payload.proxima_execucao) { toast('Preencha equipamento e data', false); return; }
-  try { await api('/api/preventivas/', { method: 'POST', body: JSON.stringify(payload) }); closeModal('m-prev'); toast('Preventiva agendada!'); loadAgenda(); } catch(e) { toast(e.message, false); }
+  try {
+    if (id) {
+      await api('/api/preventivas/' + id, { method: 'PUT', body: JSON.stringify(payload) });
+      toast('Preventiva atualizada!');
+    } else {
+      await api('/api/preventivas/', { method: 'POST', body: JSON.stringify(payload) });
+      toast('Preventiva agendada!');
+    }
+    closeModal('m-prev');
+    loadAgenda();
+  } catch(e) { toast(e.message, false); }
 }
 
 async function executarPrev(id) {
   try { await api('/api/preventivas/' + id + '/executar', { method: 'POST' }); toast('Execução registrada!'); loadAgenda(); } catch(e) { toast(e.message, false); }
+}
+
+async function editPrev(id) {
+  const p = await api('/api/preventivas/');
+  if (!p) return;
+  const plano = p.find(x => x.id === id);
+  if (!plano) return;
+  document.getElementById('prev-modal-title').textContent = 'Editar Preventiva';
+  document.getElementById('prev-save-btn').textContent = 'Salvar';
+  document.getElementById('pr-id').value = plano.id;
+  document.getElementById('pr-equip').value = plano.equipamento_id || '';
+  document.getElementById('pr-tipo').value = plano.tipo;
+  document.getElementById('pr-freq').value = plano.frequencia_dias;
+  document.getElementById('pr-data').value = plano.proxima_execucao ? plano.proxima_execucao.split('T')[0] : '';
+  document.getElementById('pr-resp').value = plano.responsavel_id || '';
+  document.getElementById('pr-proc').value = plano.procedimento || '';
+  openModal('m-prev');
+}
+
+function openNovaPrev() {
+  document.getElementById('prev-modal-title').textContent = 'Agendar Preventiva';
+  document.getElementById('prev-save-btn').textContent = 'Agendar';
+  document.getElementById('pr-id').value = '';
+  document.getElementById('pr-equip').value = '';
+  document.getElementById('pr-tipo').value = 'Preventiva';
+  document.getElementById('pr-freq').value = '30';
+  document.getElementById('pr-data').value = '';
+  document.getElementById('pr-resp').value = '';
+  document.getElementById('pr-proc').value = '';
+  openModal('m-prev');
+}
+
+async function deletePrev(id) {
+  if (!confirm('Excluir esta programação?')) return;
+  try { await api('/api/preventivas/' + id, { method: 'DELETE' }); toast('Programação excluída'); loadAgenda(); } catch(e) { toast(e.message, false); }
 }
 
 // ── EQUIPAMENTOS ──────────────────────────────────────────────
