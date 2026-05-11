@@ -168,7 +168,7 @@ textarea{resize:vertical;min-height:70px;}
     <div id="s-dash" class="screen active">
       <div class="page-hdr">
         <div><div class="page-title">Dashboard</div><div class="page-sub" id="dash-sub">Carregando...</div></div>
-        <button class="btn btn-p btn-sm" onclick="openModal('m-os')">+ Nova OS</button>
+        <button class="btn btn-p btn-sm" onclick="openNovaOS()">+ Nova OS</button>
       </div>
       <div class="metrics" id="dash-metrics"><div class="loading">Carregando indicadores...</div></div>
       <div class="two-col" style="margin-bottom:16px;">
@@ -185,7 +185,7 @@ textarea{resize:vertical;min-height:70px;}
     <div id="s-os" class="screen">
       <div class="page-hdr">
         <div><div class="page-title">Ordens de Serviço</div><div class="page-sub">Registro e controle</div></div>
-        <button class="btn btn-p" onclick="openModal('m-os')">+ Nova OS</button>
+        <button class="btn btn-p" onclick="openNovaOS()">+ Nova OS</button>
       </div>
       <div class="filter-bar">
         <div class="search-wrap"><input type="text" id="os-search" placeholder="Buscar descrição, linha..." oninput="loadOS()"/></div>
@@ -293,7 +293,8 @@ textarea{resize:vertical;min-height:70px;}
 <!-- MODAIS -->
 <div class="modal-ov" id="m-os">
   <div class="modal">
-    <div class="modal-hdr"><span class="modal-title">Nova Ordem de Serviço</span><button class="close-btn" onclick="closeModal('m-os')">×</button></div>
+    <div class="modal-hdr"><span class="modal-title" id="os-modal-title">Nova Ordem de Serviço</span><button class="close-btn" onclick="closeModal('m-os')">×</button></div>
+    <input type="hidden" id="os-edit-id"/>
     <div class="form-grid g3"><div class="field"><label>Nº OS</label><input id="os-num" readonly style="opacity:0.6"/></div><div class="field"><label>Data</label><input type="date" id="os-data"/></div><div class="field"><label>Turno</label><select id="os-turno"><option>Manhã</option><option>Tarde</option><option>Noite</option></select></div></div>
     <div class="form-grid"><div class="field"><label>Equipamento</label><select id="os-equip"></select></div><div class="field"><label>Local / Componente</label><input id="os-local" placeholder="Ex: Dosador A"/></div></div>
     <div class="form-grid g3"><div class="field"><label>Tipo</label><select id="os-tipo2"><option>Corretiva</option><option>Preventiva</option><option>Preditiva</option><option>Melhoria</option></select></div><div class="field"><label>Hora Início</label><input type="time" id="os-hi"/></div><div class="field"><label>Hora Fim</label><input type="time" id="os-hf"/></div></div>
@@ -301,7 +302,7 @@ textarea{resize:vertical;min-height:70px;}
     <div class="form-grid g1"><div class="field full"><label>Materiais / Peças</label><textarea id="os-mat" placeholder="Materiais utilizados..."></textarea></div></div>
     <div class="form-grid"><div class="field"><label>Causa / Diagnóstico</label><input id="os-causa" placeholder="Ex: Desgaste, falha elétrica..."/></div><div class="field"><label>Responsável</label><select id="os-resp"></select></div></div>
     <div class="form-grid"><div class="field"><label>Status</label><select id="os-stat"><option>Aberta</option><option>Em andamento</option><option>Aguardando peça</option><option>Concluída</option></select></div><div class="field"><label>Observações</label><input id="os-obs" placeholder="Observações adicionais..."/></div></div>
-    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-os')">Cancelar</button><button class="btn btn-p" onclick="saveOS()">Salvar OS</button></div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-os')">Cancelar</button><button class="btn btn-p" id="os-save-btn" onclick="saveOS()">Salvar OS</button></div>
   </div>
 </div>
 
@@ -580,13 +581,35 @@ async function loadOS() {
   const ordens = await api(url);
   if (!ordens) return;
   document.getElementById('os-table').innerHTML = ordens.length
-    ? `<table><thead><tr><th>Nº OS</th><th>Data</th><th>Equipamento</th><th>Tipo</th><th>Descrição</th><th>Responsável</th><th>Horas</th><th>Status</th><th></th></tr></thead><tbody>` +
-      ordens.map(o => `<tr><td><span class="tag">${o.numero}</span></td><td>${new Date(o.data).toLocaleDateString('pt-BR')}</td><td><strong>${o.equipamento_nome || o.linha || '—'}</strong>${o.local ? `<br><span style="font-size:11px;color:var(--muted)">${o.local}</span>` : ''}</td><td>${typeBadge(o.tipo)}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.descricao}</td><td>${o.responsavel_nome || '—'}</td><td style="font-family:var(--mono)">${o.tempo_total != null ? o.tempo_total + 'h' : '—'}</td><td>${statusBadge(o.status)}</td><td><button class="btn btn-danger btn-sm" onclick="deleteOS(${o.id})">✕</button></td></tr>`).join('') +
+    ? `<table><thead><tr><th>Nº OS</th><th>Data</th><th>Equipamento</th><th>Tipo</th><th>Descrição</th><th>Responsável</th><th>Horas</th><th>Status</th><th>Ações</th></tr></thead><tbody>` +
+      ordens.map(o => `<tr>
+        <td><span class="tag">${o.numero}</span></td>
+        <td>${new Date(o.data).toLocaleDateString('pt-BR')}</td>
+        <td><strong>${o.equipamento_nome || o.linha || '—'}</strong>${o.local ? `<br><span style="font-size:11px;color:var(--muted)">${o.local}</span>` : ''}</td>
+        <td>${typeBadge(o.tipo)}</td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.descricao}</td>
+        <td>${o.responsavel_nome || '—'}</td>
+        <td style="font-family:var(--mono)">${o.tempo_total != null ? o.tempo_total + 'h' : '—'}</td>
+        <td>
+          <select class="status-sel" onchange="changeOSStatus(${o.id}, this.value)" style="font-size:11px;padding:3px 6px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;">
+            <option value="Aberta" ${o.status==='Aberta'?'selected':''}>Aberta</option>
+            <option value="Em andamento" ${o.status==='Em andamento'?'selected':''}>Em andamento</option>
+            <option value="Aguardando peça" ${o.status==='Aguardando peça'?'selected':''}>Aguardando peça</option>
+            <option value="Concluída" ${o.status==='Concluída'?'selected':''}>Concluída</option>
+            <option value="Cancelada" ${o.status==='Cancelada'?'selected':''}>Cancelada</option>
+          </select>
+        </td>
+        <td style="display:flex;gap:5px;">
+          <button class="btn btn-s btn-sm" onclick="editOS(${o.id})">✏ Editar</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteOS(${o.id})">✕</button>
+        </td>
+      </tr>`).join('') +
       `</tbody></table>`
     : '<div class="empty">Nenhuma OS encontrada</div>';
 }
 
 async function saveOS() {
+  const id = document.getElementById('os-edit-id').value;
   const ei = document.getElementById('os-equip').value;
   const hi = document.getElementById('os-hi').value;
   const hf = document.getElementById('os-hf').value;
@@ -612,9 +635,14 @@ async function saveOS() {
     observacoes: document.getElementById('os-obs').value || null
   };
   try {
-    await api('/api/os/', { method: 'POST', body: JSON.stringify(payload) });
+    if (id) {
+      await api('/api/os/' + id, { method: 'PUT', body: JSON.stringify(payload) });
+      toast('OS atualizada!');
+    } else {
+      await api('/api/os/', { method: 'POST', body: JSON.stringify(payload) });
+      toast('OS criada com sucesso!');
+    }
     closeModal('m-os');
-    toast('OS criada com sucesso!');
     loadOS();
     loadDash();
   } catch(e) { toast(e.message, false); }
@@ -623,6 +651,58 @@ async function saveOS() {
 async function deleteOS(id) {
   if (!confirm('Remover esta OS?')) return;
   try { await api('/api/os/' + id, { method: 'DELETE' }); toast('OS removida'); loadOS(); } catch(e) { toast(e.message, false); }
+}
+
+async function editOS(id) {
+  const o = await api('/api/os/' + id);
+  if (!o) return;
+  document.getElementById('os-modal-title').textContent = 'Editar OS — ' + o.numero;
+  document.getElementById('os-save-btn').textContent = 'Salvar Alterações';
+  document.getElementById('os-edit-id').value = o.id;
+  document.getElementById('os-num').value = o.numero;
+  document.getElementById('os-data').value = o.data ? o.data.split('T')[0] : '';
+  document.getElementById('os-turno').value = o.turno || 'Manhã';
+  document.getElementById('os-equip').value = o.equipamento_id || '';
+  document.getElementById('os-local').value = o.local || '';
+  document.getElementById('os-tipo2').value = o.tipo;
+  document.getElementById('os-hi').value = o.hora_inicio || '';
+  document.getElementById('os-hf').value = o.hora_fim || '';
+  document.getElementById('os-desc').value = o.descricao || '';
+  document.getElementById('os-mat').value = o.materiais || '';
+  document.getElementById('os-causa').value = o.causa || '';
+  document.getElementById('os-resp').value = o.responsavel_id || '';
+  document.getElementById('os-stat').value = o.status;
+  document.getElementById('os-obs').value = o.observacoes || '';
+  openModal('m-os');
+}
+
+async function changeOSStatus(id, status) {
+  try {
+    await api('/api/os/' + id, { method: 'PUT', body: JSON.stringify({ status }) });
+    toast('Status atualizado: ' + status);
+    loadDash();
+  } catch(e) { toast(e.message, false); }
+}
+
+function openNovaOS() {
+  document.getElementById('os-modal-title').textContent = 'Nova Ordem de Serviço';
+  document.getElementById('os-save-btn').textContent = 'Salvar OS';
+  document.getElementById('os-edit-id').value = '';
+  document.getElementById('os-num').value = '';
+  document.getElementById('os-data').value = new Date().toISOString().split('T')[0];
+  document.getElementById('os-turno').value = 'Manhã';
+  document.getElementById('os-equip').value = '';
+  document.getElementById('os-local').value = '';
+  document.getElementById('os-tipo2').value = 'Corretiva';
+  document.getElementById('os-hi').value = '';
+  document.getElementById('os-hf').value = '';
+  document.getElementById('os-desc').value = '';
+  document.getElementById('os-mat').value = '';
+  document.getElementById('os-causa').value = '';
+  document.getElementById('os-resp').value = '';
+  document.getElementById('os-stat').value = 'Aberta';
+  document.getElementById('os-obs').value = '';
+  openModal('m-os');
 }
 
 // ── AGENDA ────────────────────────────────────────────────────
