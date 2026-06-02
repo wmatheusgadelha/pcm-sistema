@@ -213,6 +213,11 @@ textarea{resize:vertical;min-height:70px;}
         <div><div class="page-title">Cadastro de Equipamentos</div><div class="page-sub">Parque de máquinas</div></div>
         <button class="btn btn-p" onclick="openModal('m-equip')">+ Cadastrar</button>
       </div>
+      <div class="filter-bar" style="margin-bottom:16px;">
+        <div class="search-wrap"><input type="text" id="equip-search" placeholder="Buscar por nome ou código..." oninput="filterEquip()"/></div>
+        <select id="equip-linha-filter" onchange="filterEquip()" style="width:auto;font-size:12px;padding:5px 10px;"><option value="">Todas as linhas</option></select>
+        <select id="equip-crit-filter" onchange="filterEquip()" style="width:auto;font-size:12px;padding:5px 10px;"><option value="">Todas as criticidades</option><option>Alta</option><option>Média</option><option>Baixa</option></select>
+      </div>
       <div id="equip-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;"><div class="loading">Carregando...</div></div>
     </div>
 
@@ -386,7 +391,7 @@ textarea{resize:vertical;min-height:70px;}
   <div class="modal">
     <div class="modal-hdr"><span class="modal-title">Editar Equipamento</span><button class="close-btn" onclick="closeModal('m-edit-equip')">×</button></div>
     <input type="hidden" id="eeq-id"/>
-    <div class="form-grid"><div class="field"><label>Código</label><input id="eeq-cod" readonly style="opacity:0.6"/></div><div class="field"><label>Nome</label><input id="eeq-nome"/></div></div>
+    <div class="form-grid"><div class="field"><label>Código</label><input id="eeq-cod" placeholder="Ex: EQ-001"/></div><div class="field"><label>Nome</label><input id="eeq-nome"/></div></div>
     <div class="form-grid"><div class="field"><label>Linha / Área</label><select id="eeq-linha"></select></div><div class="field"><label>Localização</label><input id="eeq-local"/></div></div>
     <div class="form-grid g3"><div class="field"><label>Fabricante</label><input id="eeq-fab"/></div><div class="field"><label>Modelo</label><input id="eeq-mod"/></div><div class="field"><label>Nº Série</label><input id="eeq-ser" style="font-family:var(--mono)"/></div></div>
     <div class="form-grid"><div class="field"><label>Criticidade</label><select id="eeq-crit"><option>Alta</option><option>Média</option><option>Baixa</option></select></div><div class="field"><label>Data Instalação</label><input type="date" id="eeq-dt"/></div></div>
@@ -788,9 +793,35 @@ async function deletePrev(id) {
 }
 
 // ── EQUIPAMENTOS ──────────────────────────────────────────────
+let allEquips = [];
+
 async function loadEquip() {
   const equips = await api('/api/equipamentos/');
   if (!equips) return;
+  allEquips = equips;
+  const linhas = [...new Set(equips.map(e => e.linha).filter(Boolean))];
+  const filterEl = document.getElementById('equip-linha-filter');
+  if (filterEl) {
+    const cur = filterEl.value;
+    filterEl.innerHTML = '<option value="">Todas as linhas</option>' + linhas.map(l => `<option value="${l}" ${l===cur?'selected':''}>${l}</option>`).join('');
+  }
+  renderEquipGrid(equips);
+}
+
+function filterEquip() {
+  const search = (document.getElementById('equip-search')?.value || '').toLowerCase();
+  const linha = document.getElementById('equip-linha-filter')?.value || '';
+  const crit = document.getElementById('equip-crit-filter')?.value || '';
+  const filtered = allEquips.filter(e => {
+    const matchSearch = !search || e.nome.toLowerCase().includes(search) || e.codigo.toLowerCase().includes(search);
+    const matchLinha = !linha || e.linha === linha;
+    const matchCrit = !crit || e.criticidade === crit;
+    return matchSearch && matchLinha && matchCrit;
+  });
+  renderEquipGrid(filtered);
+}
+
+function renderEquipGrid(equips) {
   document.getElementById('equip-grid').innerHTML = equips.map(e => `
     <div class="equip-card">
       <div class="equip-card-hdr" style="background:var(--nav);">
@@ -847,7 +878,10 @@ async function editEquip(id) {
 
 async function saveEditEquip() {
   const id = document.getElementById('eeq-id').value;
+  const codigo = document.getElementById('eeq-cod').value.trim();
+  if (!codigo) { toast('Preencha o código', false); return; }
   const payload = {
+    codigo: codigo,
     nome: document.getElementById('eeq-nome').value,
     linha: document.getElementById('eeq-linha').value,
     local: document.getElementById('eeq-local').value || null,
