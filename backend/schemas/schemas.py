@@ -59,6 +59,7 @@ class EquipamentoCreate(BaseModel):
     observacoes: Optional[str] = None
 
 class EquipamentoUpdate(BaseModel):
+    codigo: Optional[str] = None
     nome: Optional[str] = None
     linha: Optional[str] = None
     local: Optional[str] = None
@@ -68,6 +69,7 @@ class EquipamentoUpdate(BaseModel):
     criticidade: Optional[str] = None
     observacoes: Optional[str] = None
     is_active: Optional[bool] = None
+    data_instalacao: Optional[datetime] = None
 
 class EquipamentoOut(BaseModel):
     id: int
