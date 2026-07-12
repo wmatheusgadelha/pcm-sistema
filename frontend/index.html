@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PCM — Controle de Manutenção</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Qualimpel — Sistema de Gestão Industrial</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -12,302 +12,306 @@
   --nav:#0f1923;--accent:#38bdf8;--accent2:#f97316;--accent3:#22c55e;
   --bg:#f0f2f5;--card:#fff;--border:#e5e7eb;--text:#111827;--muted:#6b7280;
   --surface:#f9fafb;--font:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;
+  --sidebar-w:220px;
 }
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;}
+button{cursor:pointer;font-family:var(--font);}
+input,select,textarea{font-family:var(--font);}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:99px}
 
-/* LOGIN */
-#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--nav);}
+/* ── LOGIN ───────────────────────────────────────────────────────────────── */
+#screen-login{display:none;align-items:center;justify-content:center;min-height:100vh;background:var(--nav);}
+#screen-login.active{display:flex}
 .login-box{background:#1a2535;border:1px solid #2d3f52;border-radius:12px;padding:40px;width:360px;}
 .login-logo{text-align:center;margin-bottom:28px;}
-.login-logo h1{color:#fff;font-size:22px;font-weight:600;letter-spacing:0.05em;}
-.login-logo span{color:var(--accent);font-size:12px;letter-spacing:0.1em;}
+.login-logo h1{color:#fff;font-size:22px;font-weight:600;letter-spacing:.05em;}
+.login-logo span{color:var(--accent);font-size:12px;letter-spacing:.1em;}
 .login-field{margin-bottom:16px;}
-.login-field label{display:block;font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;}
-.login-field input{width:100%;background:#0f1923;border:1px solid #2d3f52;border-radius:8px;padding:10px 14px;color:#fff;font-family:var(--font);font-size:14px;}
+.login-field label{display:block;font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
+.login-field input{width:100%;background:#0f1923;border:1px solid #2d3f52;border-radius:8px;padding:10px 14px;color:#fff;font-size:14px;}
 .login-field input:focus{outline:none;border-color:var(--accent);}
-.login-btn{width:100%;background:var(--accent);color:#0f1923;border:none;border-radius:8px;padding:12px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;}
-.login-btn:hover{opacity:0.88;}
-.login-hint{text-align:center;font-size:12px;color:#64748b;margin-top:16px;}
+.login-btn{width:100%;background:var(--accent);color:#0f1923;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;margin-top:8px;}
+.login-btn:hover{opacity:.88}
 .login-error{background:#7f1d1d;color:#fca5a5;padding:10px;border-radius:6px;font-size:13px;margin-bottom:12px;display:none;}
 
-/* APP */
-#app-screen{display:none;height:100vh;flex-direction:column;}
-.top-nav{background:var(--nav);display:flex;align-items:stretch;gap:0;overflow-x:auto;flex-shrink:0;height:52px;}
-.nav-logo{display:flex;align-items:center;gap:8px;padding:0 20px;border-right:1px solid rgba(255,255,255,0.08);}
-.nav-logo-t{color:#fff;font-size:13px;font-weight:600;letter-spacing:0.05em;}
-.nav-logo-b{background:var(--accent);color:#0f1923;font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px;}
-.nav-btn{background:none;border:none;cursor:pointer;padding:0 16px;font-family:var(--font);font-size:12px;font-weight:500;color:#94a3b8;display:flex;align-items:center;gap:6px;border-bottom:2px solid transparent;height:100%;white-space:nowrap;transition:all 0.15s;}
-.nav-btn:hover{color:#fff;background:rgba(255,255,255,0.05);}
-.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
-.nav-spacer{flex:1;}
-.nav-user{display:flex;align-items:center;gap:8px;padding:0 16px;border-left:1px solid rgba(255,255,255,0.08);}
-.nav-user-name{color:#cbd5e1;font-size:12px;}
-.nav-logout{background:none;border:1px solid #2d3f52;border-radius:6px;color:#94a3b8;font-size:11px;padding:4px 10px;cursor:pointer;font-family:var(--font);}
-.nav-logout:hover{color:#fff;border-color:#94a3b8;}
-.content{flex:1;overflow-y:auto;padding:24px;}
-.screen{display:none;}
-.screen.active{display:block;}
+/* ── APP SHELL ───────────────────────────────────────────────────────────── */
+#screen-app{display:none;height:100vh;flex-direction:row;}
+#screen-app.active{display:flex}
 
-/* COMPONENTS */
-.page-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
-.page-title{font-size:18px;font-weight:600;}
-.page-sub{font-size:13px;color:var(--muted);margin-top:2px;}
-.btn{border:none;cursor:pointer;font-family:var(--font);font-weight:500;border-radius:8px;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;}
+/* Sidebar */
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);height:100vh;background:var(--nav);display:flex;flex-direction:column;overflow:hidden;}
+.sidebar-logo{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px;min-height:52px;}
+.sidebar-logo-icon{width:28px;height:28px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0f1923;flex-shrink:0;}
+.sidebar-logo-text strong{font-size:13px;font-weight:600;color:#fff;display:block;}
+.sidebar-logo-text span{font-size:10px;color:#64748b;letter-spacing:.3px;}
+.sidebar-section{padding:14px 12px 4px;font-size:10px;font-weight:700;color:#334155;letter-spacing:1px;text-transform:uppercase;}
+.sidebar-nav{flex:1;overflow-y:auto;padding-bottom:8px;}
+.snav{display:flex;align-items:center;gap:9px;padding:8px 14px;font-size:12px;font-weight:500;color:#94a3b8;cursor:pointer;border-left:2px solid transparent;transition:all .15s;user-select:none;}
+.snav:hover{background:rgba(255,255,255,.05);color:#fff;}
+.snav.active{background:rgba(56,189,248,.1);color:var(--accent);border-left-color:var(--accent);}
+.snav-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0;}
+.snav-sub{padding-left:30px;font-size:11px;}
+.sidebar-user{border-top:1px solid rgba(255,255,255,.08);padding:10px 14px;display:flex;align-items:center;gap:9px;}
+.sidebar-avatar{width:28px;height:28px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0f1923;flex-shrink:0;}
+.sidebar-user-info{flex:1;min-width:0;}
+.sidebar-user-info .sname{font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sidebar-user-info .srole{font-size:10px;color:#64748b;}
+.sidebar-logout{background:none;border:none;color:#475569;font-size:14px;padding:4px;border-radius:4px;}
+.sidebar-logout:hover{color:#ef4444;}
+
+/* Main */
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.main-content{flex:1;overflow-y:auto;padding:24px;}
+
+/* ── HOME CARDS ─────────────────────────────────────────────────────────── */
+.home-greeting{margin-bottom:24px;}
+.home-greeting h1{font-size:22px;font-weight:600;margin-bottom:4px;}
+.home-greeting p{font-size:13px;color:var(--muted);}
+.home-stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px;}
+.home-stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+.home-stat-card .lbl{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+.home-stat-card .val{font-size:24px;font-weight:600;font-family:var(--mono);}
+.home-stat-card .sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.modules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;}
+.mod-card{border-radius:10px;padding:22px 18px;cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative;overflow:hidden;border:1px solid transparent;}
+.mod-card:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.15);}
+.mod-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.08) 0%,transparent 60%);pointer-events:none;}
+.mod-card-icon{font-size:26px;margin-bottom:12px;display:block;}
+.mod-card-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:3px;}
+.mod-card-desc{font-size:11px;color:rgba(255,255,255,.65);line-height:1.5;}
+.card-pcm{background:linear-gradient(135deg,#1e3a5f,#2563eb);}
+.card-pd{background:linear-gradient(135deg,#3b1f6a,#7c3aed);}
+.card-prod{background:linear-gradient(135deg,#1a4731,#059669);}
+.card-pcp{background:linear-gradient(135deg,#4a2010,#ea580c);}
+.card-rh{background:linear-gradient(135deg,#4a1a3a,#db2777);}
+.card-dem{background:linear-gradient(135deg,#1a3a4a,#0891b2);}
+.card-log{background:linear-gradient(135deg,#3a3a10,#ca8a04);}
+.card-adm{background:linear-gradient(135deg,#1e293b,#374151);}
+
+/* ── PCM — componentes idênticos ao original ─────────────────────────────── */
+.pcm-wrap{display:flex;flex-direction:column;height:100%;min-height:0;}
+.pcm-nav{background:var(--nav);display:flex;align-items:stretch;overflow-x:auto;flex-shrink:0;height:48px;}
+.pcm-logo{display:flex;align-items:center;gap:8px;padding:0 16px;border-right:1px solid rgba(255,255,255,.08);}
+.pcm-logo-t{color:#fff;font-size:12px;font-weight:600;letter-spacing:.05em;}
+.pcm-logo-b{background:var(--accent);color:#0f1923;font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px;}
+.pcm-btn{background:none;border:none;padding:0 14px;font-size:12px;font-weight:500;color:#94a3b8;display:flex;align-items:center;gap:5px;border-bottom:2px solid transparent;height:100%;white-space:nowrap;transition:all .15s;}
+.pcm-btn:hover{color:#fff;background:rgba(255,255,255,.05);}
+.pcm-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.pcm-spacer{flex:1;}
+.pcm-user{display:flex;align-items:center;gap:8px;padding:0 14px;border-left:1px solid rgba(255,255,255,.08);}
+.pcm-user-name{color:#cbd5e1;font-size:12px;}
+.pcm-inner{flex:1;overflow-y:auto;padding:20px;background:var(--bg);}
+.pcm-screen{display:none;}
+.pcm-screen.active{display:block;}
+
+/* PCM componentes */
+.page-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.page-title{font-size:17px;font-weight:600;}
+.page-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.btn{border:none;cursor:pointer;font-family:var(--font);font-weight:500;border-radius:8px;display:inline-flex;align-items:center;gap:6px;transition:all .15s;}
 .btn-p{background:var(--accent);color:#0f1923;font-size:13px;padding:8px 16px;}
-.btn-p:hover{opacity:0.88;}
+.btn-p:hover{opacity:.88}
 .btn-s{background:var(--card);border:1px solid var(--border);color:var(--text);font-size:13px;padding:8px 14px;}
 .btn-s:hover{background:var(--surface);}
 .btn-sm{font-size:12px;padding:5px 10px;}
 .btn-danger{background:#fee2e2;color:#991b1b;border:none;}
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
-.mc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden;}
+.btn-danger:hover{background:#fecaca;}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px;}
+.mc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;}
 .mc-accent{position:absolute;top:0;left:0;width:3px;height:100%;}
-.mc-lbl{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;}
-.mc-val{font-size:26px;font-weight:600;font-family:var(--mono);line-height:1;}
+.mc-lbl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.mc-val{font-size:24px;font-weight:600;font-family:var(--mono);line-height:1;}
 .mc-sub{font-size:11px;color:var(--muted);margin-top:4px;}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;}
-.card-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;}
+.card-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .card-title{font-size:13px;font-weight:600;}
 .table-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:13px;}
-th{text-align:left;padding:10px 16px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--border);background:var(--surface);}
-td{padding:11px 16px;border-bottom:1px solid var(--border);vertical-align:middle;}
+th{text-align:left;padding:9px 14px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);background:var(--surface);}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:var(--surface);}
-.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;}
-.bg{background:#dcfce7;color:#14532d;}
-.ba{background:#fef3c7;color:#78350f;}
-.br{background:#fee2e2;color:#7f1d1d;}
-.bb{background:#dbeafe;color:#1e3a5f;}
-.bp{background:#ede9fe;color:#3b0764;}
-.bgy{background:var(--surface);color:var(--muted);}
-.filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
-.search-wrap{position:relative;flex:1;min-width:180px;}
-.search-wrap input{padding-left:32px;}
-.search-wrap::before{content:'⌕';position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none;}
-.chip{display:inline-flex;align-items:center;padding:5px 12px;border-radius:100px;font-size:12px;font-weight:500;background:var(--card);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all 0.12s;}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;}
+.bg{background:#dcfce7;color:#14532d;}.ba{background:#fef3c7;color:#78350f;}.br{background:#fee2e2;color:#7f1d1d;}
+.bb{background:#dbeafe;color:#1e3a5f;}.bp{background:#ede9fe;color:#3b0764;}.bgy{background:var(--surface);color:var(--muted);}
+.filter-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+.search-wrap{position:relative;flex:1;min-width:160px;}
+.search-wrap input{padding-left:30px;}
+.search-wrap::before{content:'⌕';position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none;}
+.chip{display:inline-flex;align-items:center;padding:5px 12px;border-radius:100px;font-size:12px;font-weight:500;background:var(--card);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .12s;}
 .chip.active{background:var(--accent);color:#0f1923;border-color:var(--accent);}
 .chip:hover:not(.active){border-color:var(--accent);color:var(--accent);}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
-.timeline-item{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.timeline-item{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);}
 .tl-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
 .tl-title{font-size:13px;font-weight:500;}
 .tl-meta{font-size:11px;color:var(--muted);margin-top:2px;}
-.prog-bar{height:6px;background:var(--surface);border-radius:3px;overflow:hidden;min-width:80px;}
-.prog-fill{height:100%;border-radius:3px;}
-.tag{display:inline-block;padding:2px 7px;border-radius:3px;font-size:11px;font-weight:500;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);}
-.inline-stats{display:flex;border-top:1px solid var(--border);}
-.is-stat{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px;}
-.is-val{font-size:18px;font-weight:600;font-family:var(--mono);}
-.is-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;}
-.divider-v{width:1px;background:var(--border);align-self:stretch;}
+.equip-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.equip-card-hdr{padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.equip-avatar{width:34px;height:34px;border-radius:7px;background:var(--nav);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
 
-/* MODAL */
-.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:1000;}
+/* Modal PCM */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;}
 .modal-ov.open{display:flex;}
-.modal{background:var(--card);border-radius:12px;border:1px solid var(--border);width:100%;max-width:640px;max-height:88vh;overflow-y:auto;}
-.modal-hdr{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--card);z-index:1;}
-.modal-title{font-size:15px;font-weight:600;}
+.modal{background:var(--card);border-radius:12px;border:1px solid var(--border);width:100%;max-width:640px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.modal-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--card);z-index:1;}
+.modal-title{font-size:14px;font-weight:600;}
 .close-btn{background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);line-height:1;padding:2px 6px;}
-.modal-ftr{padding:14px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:var(--card);}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px;}
+.modal-ftr{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--card);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px;}
 .form-grid.g1{grid-template-columns:1fr;}
 .form-grid.g3{grid-template-columns:1fr 1fr 1fr;}
 .field{display:flex;flex-direction:column;gap:5px;}
 .field.full{grid-column:1/-1;}
-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;}
-input,select,textarea{font-family:var(--font);font-size:13px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);width:100%;}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(56,189,248,0.15);}
-textarea{resize:vertical;min-height:70px;}
+label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+input,select,textarea{font-family:var(--font);font-size:13px;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);width:100%;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(56,189,248,.15);}
+textarea{resize:vertical;min-height:65px;}
 
-/* TOAST */
-.toast{position:fixed;bottom:20px;right:20px;background:#0f1923;color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;z-index:2000;display:none;align-items:center;gap:8px;border:1px solid #2d3f52;}
+/* Toast */
+.toast{position:fixed;bottom:18px;right:18px;background:#0f1923;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;z-index:2000;display:none;align-items:center;gap:8px;border:1px solid #2d3f52;}
 .toast.show{display:flex;}
-.loading{text-align:center;padding:40px;color:var(--muted);font-size:14px;}
-.empty{text-align:center;padding:40px;color:var(--muted);}
-.equip-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
-.equip-card-hdr{padding:14px 16px;display:flex;align-items:center;gap:12px;}
-.equip-avatar{width:36px;height:36px;border-radius:8px;background:var(--nav);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.loading{text-align:center;padding:36px;color:var(--muted);font-size:13px;}
+.empty{text-align:center;padding:36px;color:var(--muted);}
+
+/* Admin usuários */
+.admin-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.admin-search{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;gap:8px;}
+.admin-search input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 12px;font-size:13px;outline:none;}
+.admin-search input:focus{border-color:var(--accent);}
+.mod-pills{display:flex;flex-wrap:wrap;gap:3px;}
+.mpill{padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;background:#dbeafe;color:#1e3a5f;}
+/* Permissões modal */
+.perm-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 16px;}
+.perm-row{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 10px;}
+.perm-left{display:flex;align-items:center;gap:8px;}
+.toggle{position:relative;width:34px;height:18px;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.slider{position:absolute;inset:0;background:#d1d5db;border-radius:99px;cursor:pointer;transition:.2s;}
+.toggle input:checked+.slider{background:var(--accent);}
+.slider::after{content:'';position:absolute;width:12px;height:12px;background:#fff;border-radius:50%;top:3px;left:3px;transition:.2s;}
+.toggle input:checked+.slider::after{transform:translateX(16px);}
+.perm-label{font-size:12px;font-weight:500;}
+.perm-role{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:2px 6px;font-size:11px;outline:none;color:var(--text);}
+.perm-role:focus{border-color:var(--accent);}
+
+/* Conta modal */
+.conta-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+.conta-modal.open{display:flex;}
+
+/* Módulo placeholder */
+.mod-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:360px;text-align:center;}
+.mod-placeholder-icon{font-size:52px;margin-bottom:14px;opacity:.5;}
+.mod-placeholder h2{font-size:18px;font-weight:600;margin-bottom:8px;}
+.mod-placeholder p{font-size:13px;color:var(--muted);max-width:340px;line-height:1.6;}
 </style>
 </head>
 <body>
 
+<div class="toast" id="toast"></div>
+
 <!-- LOGIN -->
-<div id="login-screen">
+<div id="screen-login" class="active">
   <div class="login-box">
     <div class="login-logo">
-      <h1>⚙ PCM</h1>
-      <span>CONTROLE DE MANUTENÇÃO</span>
+      <h1>Q QUALIMPEL</h1>
+      <span>SISTEMA DE GESTÃO INDUSTRIAL</span>
     </div>
     <div class="login-error" id="login-error"></div>
-    <div class="login-field"><label>E-mail</label><input type="email" id="login-email" value="admin@pcm.com" placeholder="seu@email.com"/></div>
-    <div class="login-field"><label>Senha</label><input type="password" id="login-pass" value="admin123" placeholder="••••••••"/></div>
-    <button class="login-btn" onclick="doLogin()">Entrar</button>
-    <div class="login-hint">Demo: admin@pcm.com / admin123</div>
+    <div class="login-field"><label>E-mail</label><input type="email" id="login-email" placeholder="seu@email.com"/></div>
+    <div class="login-field"><label>Senha</label><input type="password" id="login-senha" placeholder="••••••••"/></div>
+    <button class="login-btn" id="btn-login" onclick="doLogin()">Entrar</button>
   </div>
 </div>
 
 <!-- APP -->
-<div id="app-screen">
-  <nav class="top-nav">
-    <div class="nav-logo"><span class="nav-logo-t">PCM</span><span class="nav-logo-b">v2</span></div>
-    <button class="nav-btn active" onclick="nav('dash',this)">▦ Dashboard</button>
-    <button class="nav-btn" onclick="nav('os',this)">≡ Ordens de Serviço</button>
-    <button class="nav-btn" onclick="nav('agenda',this)">◫ Programação</button>
-    <button class="nav-btn" onclick="nav('equip',this)">⊞ Equipamentos</button>
-    <button class="nav-btn" onclick="nav('colabs',this)">◉ Colaboradores</button>
-    <button class="nav-btn" onclick="nav('rel',this)">⊟ Relatórios</button>
-    <button class="nav-btn" onclick="nav('config',this)">⚙ Configurações</button>
-    <div class="nav-spacer"></div>
-    <div class="nav-user"><span class="nav-user-name" id="nav-nome">—</span><button class="nav-logout" onclick="openContaModal()" style="margin-right:6px">⚙ Minha Conta</button><button class="nav-logout" onclick="logout()">Sair</button></div>
-  </nav>
-  <div class="content">
-
-    <!-- DASHBOARD -->
-    <div id="s-dash" class="screen active">
-      <div class="page-hdr">
-        <div><div class="page-title">Dashboard</div><div class="page-sub" id="dash-sub">Carregando...</div></div>
-        <button class="btn btn-p btn-sm" onclick="openNovaOS()">+ Nova OS</button>
-      </div>
-      <div class="metrics" id="dash-metrics"><div class="loading">Carregando indicadores...</div></div>
-      <div class="two-col" style="margin-bottom:16px;">
-        <div class="card"><div class="card-hdr"><span class="card-title">OS por Tipo</span></div><div style="padding:16px;position:relative;height:200px;"><canvas id="c-tipo" role="img" aria-label="OS por tipo"></canvas></div><div id="leg-tipo" style="display:flex;flex-wrap:wrap;gap:10px;padding:0 16px 14px;font-size:11px;color:var(--muted);"></div></div>
-        <div class="card"><div class="card-hdr"><span class="card-title">OS por Linha</span></div><div style="padding:16px;position:relative;height:200px;"><canvas id="c-linha" role="img" aria-label="OS por linha"></canvas></div></div>
-      </div>
-      <div class="two-col">
-        <div class="card"><div class="card-hdr"><span class="card-title">Últimas OS</span></div><div id="dash-ultimas"><div class="loading">...</div></div></div>
-        <div class="card"><div class="card-hdr"><span class="card-title">Preventivas — Próximos 7 dias</span></div><div id="dash-prev"><div class="loading">...</div></div></div>
-      </div>
+<div id="screen-app">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">Q</div>
+      <div class="sidebar-logo-text"><strong>QUALIMPEL</strong><span>Gestão Industrial</span></div>
     </div>
-
-    <!-- OS -->
-    <div id="s-os" class="screen">
-      <div class="page-hdr">
-        <div><div class="page-title">Ordens de Serviço</div><div class="page-sub">Registro e controle</div></div>
-        <button class="btn btn-p" onclick="openNovaOS()">+ Nova OS</button>
+    <div class="sidebar-nav" id="sidebar-nav"></div>
+    <div class="sidebar-user">
+      <div class="sidebar-avatar" id="sb-avatar"></div>
+      <div class="sidebar-user-info">
+        <div class="sname" id="sb-nome">—</div>
+        <div class="srole" id="sb-role">—</div>
       </div>
-      <div class="filter-bar">
-        <div class="search-wrap"><input type="text" id="os-search" placeholder="Buscar descrição, linha..." oninput="loadOS()"/></div>
-        <select id="os-tipo" onchange="loadOS()" style="width:auto;font-size:12px;padding:5px 10px;"><option value="">Todos os tipos</option><option>Corretiva</option><option>Preventiva</option><option>Preditiva</option><option>Melhoria</option></select>
-        <select id="os-status" onchange="loadOS()" style="width:auto;font-size:12px;padding:5px 10px;"><option value="">Todos os status</option><option>Aberta</option><option>Em andamento</option><option>Aguardando peça</option><option>Concluída</option><option>Cancelada</option></select>
-      </div>
-      <div class="card"><div class="table-wrap"><div id="os-table"><div class="loading">Carregando...</div></div></div></div>
+      <button class="sidebar-logout" title="Sair" onclick="doLogout()">⏻</button>
     </div>
-
-    <!-- AGENDA -->
-    <div id="s-agenda" class="screen">
-      <div class="page-hdr">
-        <div><div class="page-title">Programação de Manutenções</div><div class="page-sub">Plano de manutenção preventiva</div></div>
-        <button class="btn btn-p" onclick="openNovaPrev()">+ Agendar</button>
-      </div>
-      <div class="two-col">
-        <div class="card"><div class="card-hdr"><span class="card-title">Plano de Preventivas</span><span id="prev-vencendo" class="badge ba"></span></div><div id="prev-table"><div class="loading">Carregando...</div></div></div>
-        <div class="card"><div class="card-hdr"><span class="card-title">Vencendo em 7 dias</span></div><div id="prev-alert"><div class="loading">Carregando...</div></div></div>
-      </div>
-    </div>
-
-    <!-- EQUIPAMENTOS -->
-    <div id="s-equip" class="screen">
-      <div class="page-hdr">
-        <div><div class="page-title">Cadastro de Equipamentos</div><div class="page-sub">Parque de máquinas</div></div>
-        <button class="btn btn-p" onclick="openModal('m-equip')">+ Cadastrar</button>
-      </div>
-      <div class="filter-bar" style="margin-bottom:16px;">
-        <div class="search-wrap"><input type="text" id="equip-search" placeholder="Buscar por nome ou código..." oninput="filterEquip()"/></div>
-        <select id="equip-linha-filter" onchange="filterEquip()" style="width:auto;font-size:12px;padding:5px 10px;"><option value="">Todas as linhas</option></select>
-        <select id="equip-crit-filter" onchange="filterEquip()" style="width:auto;font-size:12px;padding:5px 10px;"><option value="">Todas as criticidades</option><option>Alta</option><option>Média</option><option>Baixa</option></select>
-      </div>
-      <div id="equip-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;"><div class="loading">Carregando...</div></div>
-    </div>
-
-    <!-- COLABORADORES -->
-    <div id="s-colabs" class="screen">
-      <div class="page-hdr">
-        <div><div class="page-title">Colaboradores</div><div class="page-sub">Equipe de manutenção</div></div>
-        <button class="btn btn-p" onclick="openModal('m-colab')">+ Cadastrar</button>
-      </div>
-      <div class="card"><div class="table-wrap"><div id="colabs-table"><div class="loading">Carregando...</div></div></div></div>
-    </div>
-
-    <!-- RELATÓRIOS -->
-    <div id="s-rel" class="screen">
-      <div class="page-hdr">
-        <div><div class="page-title">Relatórios</div><div class="page-sub">Indicadores e análises</div></div>
-      </div>
-      <div class="metrics" id="rel-kpis"></div>
-      <div class="two-col" style="margin-bottom:16px;">
-        <div class="card"><div class="card-hdr"><span class="card-title">OS por Mês (ano atual)</span></div><div style="padding:16px;position:relative;height:200px;"><canvas id="c-mes" role="img" aria-label="OS por mês"></canvas></div></div>
-        <div class="card"><div class="card-hdr"><span class="card-title">Horas por Responsável</span></div><div style="padding:16px;position:relative;height:200px;"><canvas id="c-resp" role="img" aria-label="Horas por responsável"></canvas></div></div>
-      </div>
-      <div class="card"><div class="card-hdr"><span class="card-title">Histórico Completo</span></div><div class="table-wrap"><div id="rel-table"><div class="loading">Carregando...</div></div></div></div>
-    </div>
-
-    <!-- CONFIGURAÇÕES -->
-    <div id="s-config" class="screen">
-      <div class="page-hdr">
-        <div><div class="page-title">Configurações</div><div class="page-sub">Gerencie linhas, áreas e parâmetros do sistema</div></div>
-      </div>
-      <div class="two-col">
-        <div class="card">
-          <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;">
-            <span class="card-title">Linhas e Áreas</span>
-            <button class="btn btn-p btn-sm" onclick="openNovaLinha()">+ Adicionar</button>
-          </div>
-          <div id="linhas-list" style="padding:8px 0;"></div>
-        </div>
-        <div class="card">
-          <div class="card-hdr"><span class="card-title">Informações do Sistema</span></div>
-          <div style="padding:16px;font-size:13px;color:var(--muted);line-height:2;">
-            <div style="display:flex;justify-content:space-between;border-bottom:0.5px solid var(--border);padding-bottom:8px;margin-bottom:8px;"><span>Versão</span><span style="color:var(--text);font-weight:500">PCM v2.0</span></div>
-            <div style="display:flex;justify-content:space-between;border-bottom:0.5px solid var(--border);padding-bottom:8px;margin-bottom:8px;"><span>Usuário logado</span><span id="cfg-user" style="color:var(--text);font-weight:500">—</span></div>
-            <div style="display:flex;justify-content:space-between;"><span>Perfil</span><span id="cfg-role" style="color:var(--text);font-weight:500">—</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
+  </aside>
+  <div class="main-area">
+    <div class="main-content" id="main-content"></div>
   </div>
 </div>
 
-<!-- removido bloco duplicado -->
-<div id="s-config" class="screen" style="display:none">
-  <div class="page-hdr">
-    <div><div class="page-title">Configurações</div><div class="page-sub">Gerencie linhas, áreas e parâmetros do sistema</div></div>
-  </div>
-  <div class="two-col">
-    <div class="card">
-      <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;">
-        <span class="card-title">Linhas e Áreas</span>
-        <button class="btn btn-p btn-sm" onclick="openModal('m-nova-linha')">+ Adicionar</button>
-      </div>
-      <div id="linhas-list" style="padding:8px 0;"></div>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><span class="card-title">Informações do Sistema</span></div>
-      <div style="padding:16px;font-size:13px;color:var(--muted);line-height:2;">
-        <div style="display:flex;justify-content:space-between;border-bottom:0.5px solid var(--border);padding-bottom:8px;margin-bottom:8px;"><span>Versão</span><span style="color:var(--text);font-weight:500">PCM v2.0</span></div>
-        <div style="display:flex;justify-content:space-between;border-bottom:0.5px solid var(--border);padding-bottom:8px;margin-bottom:8px;"><span>Empresa</span><span style="color:var(--text);font-weight:500">Qualimpel Indústria Química</span></div>
-        <div style="display:flex;justify-content:space-between;border-bottom:0.5px solid var(--border);padding-bottom:8px;margin-bottom:8px;"><span>Usuário logado</span><span id="cfg-user" style="color:var(--text);font-weight:500">—</span></div>
-        <div style="display:flex;justify-content:space-between;"><span>Perfil</span><span id="cfg-role" style="color:var(--text);font-weight:500">—</span></div>
+<!-- MODAL CONTA -->
+<div class="conta-modal" id="modal-conta">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-hdr"><span class="modal-title">⚙ Minha Conta</span><button class="close-btn" onclick="closeConta()">×</button></div>
+    <div style="padding:16px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+        <div id="conta-avatar" style="width:44px;height:44px;border-radius:50%;background:var(--nav);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--accent);flex-shrink:0;"></div>
+        <div><div id="conta-nome" style="font-size:15px;font-weight:600;"></div><div id="conta-email" style="font-size:12px;color:var(--muted);"></div></div>
       </div>
     </div>
+    <div style="padding:16px;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Alterar Senha</div>
+      <div class="form-grid g1" style="padding:0;gap:10px;">
+        <div class="field"><label>Senha Atual</label><input type="password" id="cp-atual"/></div>
+        <div class="field"><label>Nova Senha</label><input type="password" id="cp-nova"/></div>
+        <div class="field"><label>Confirmar Nova Senha</label><input type="password" id="cp-conf"/></div>
+      </div>
+    </div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeConta()">Fechar</button><button class="btn btn-p" onclick="changePassword()">Salvar Nova Senha</button></div>
   </div>
 </div>
 
-<!-- MODAIS -->
+<!-- MODAL CONFIRMAR -->
+<div class="modal-ov" id="modal-confirm">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-hdr"><span class="modal-title" id="confirm-title">Confirmar</span><button class="close-btn" onclick="closeModal('modal-confirm')">×</button></div>
+    <div style="padding:16px;font-size:13px;color:var(--muted);" id="confirm-text"></div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('modal-confirm')">Cancelar</button><button class="btn btn-danger" id="confirm-ok">Confirmar</button></div>
+  </div>
+</div>
+
+<!-- MODAL USUÁRIO ADMIN -->
+<div class="modal-ov" id="modal-user">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-hdr"><span class="modal-title" id="modal-user-title">Novo Usuário</span><button class="close-btn" onclick="closeModal('modal-user')">×</button></div>
+    <input type="hidden" id="u-id"/>
+    <div class="form-grid">
+      <div class="field full"><label>Nome completo</label><input id="u-nome"/></div>
+      <div class="field"><label>E-mail</label><input type="email" id="u-email"/></div>
+      <div class="field"><label>Senha <span id="u-senha-hint" style="text-transform:none;font-weight:400;font-size:10px;color:var(--muted)">(vazio = manter)</span></label><input type="password" id="u-senha" placeholder="Mínimo 6 caracteres"/></div>
+      <div class="field"><label>Matrícula</label><input id="u-matricula"/></div>
+      <div class="field"><label>Cargo</label><input id="u-cargo"/></div>
+      <div class="field"><label>Telefone</label><input id="u-tel"/></div>
+      <div class="field"><label>Perfil no portal</label><select id="u-role"><option value="usuario">Usuário</option><option value="admin">Administrador</option><option value="superadmin">Superadmin</option></select></div>
+      <div class="field"><label>Status</label><select id="u-ativo"><option value="true">Ativo</option><option value="false">Inativo</option></select></div>
+    </div>
+    <div style="padding:0 16px 4px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">🔐 Acesso aos Módulos</div>
+    <div class="perm-grid" id="perm-grid"></div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('modal-user')">Cancelar</button><button class="btn btn-p" onclick="saveUser()">Salvar</button></div>
+  </div>
+</div>
+
+<!-- MODAIS PCM -->
 <div class="modal-ov" id="m-os">
   <div class="modal">
     <div class="modal-hdr"><span class="modal-title" id="os-modal-title">Nova Ordem de Serviço</span><button class="close-btn" onclick="closeModal('m-os')">×</button></div>
     <input type="hidden" id="os-edit-id"/>
-    <div class="form-grid g3"><div class="field"><label>Nº OS</label><input id="os-num" readonly style="opacity:0.6"/></div><div class="field"><label>Data</label><input type="date" id="os-data"/></div><div class="field"><label>Turno</label><select id="os-turno"><option>Manhã</option><option>Tarde</option><option>Noite</option></select></div></div>
+    <div class="form-grid g3"><div class="field"><label>Nº OS</label><input id="os-num" readonly style="opacity:.6"/></div><div class="field"><label>Data</label><input type="date" id="os-data"/></div><div class="field"><label>Turno</label><select id="os-turno"><option>Manhã</option><option>Tarde</option><option>Noite</option></select></div></div>
     <div class="form-grid"><div class="field"><label>Equipamento</label><select id="os-equip"></select></div><div class="field"><label>Local / Componente</label><input id="os-local" placeholder="Ex: Dosador A"/></div></div>
     <div class="form-grid g3"><div class="field"><label>Tipo</label><select id="os-tipo2"><option>Corretiva</option><option>Preventiva</option><option>Preditiva</option><option>Melhoria</option></select></div><div class="field"><label>Hora Início</label><input type="time" id="os-hi"/></div><div class="field"><label>Hora Fim</label><input type="time" id="os-hf"/></div></div>
     <div class="form-grid g1"><div class="field full"><label>Descrição do Serviço</label><textarea id="os-desc" placeholder="Descreva o serviço realizado..."></textarea></div></div>
     <div class="form-grid g1"><div class="field full"><label>Materiais / Peças</label><textarea id="os-mat" placeholder="Materiais utilizados..."></textarea></div></div>
     <div class="form-grid"><div class="field"><label>Causa / Diagnóstico</label><input id="os-causa" placeholder="Ex: Desgaste, falha elétrica..."/></div><div class="field"><label>Responsável</label><select id="os-resp"></select></div></div>
     <div class="form-grid"><div class="field"><label>Status</label><select id="os-stat"><option>Aberta</option><option>Em andamento</option><option>Aguardando peça</option><option>Concluída</option></select></div><div class="field"><label>Observações</label><input id="os-obs" placeholder="Observações adicionais..."/></div></div>
-    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-os')">Cancelar</button><button class="btn btn-p" id="os-save-btn" onclick="saveOS()">Salvar OS</button></div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-os')">Cancelar</button><button class="btn btn-p" id="os-save-btn" onclick="savePCMOS()">Salvar OS</button></div>
   </div>
 </div>
 
@@ -318,72 +322,19 @@ textarea{resize:vertical;min-height:70px;}
     <div class="form-grid"><div class="field"><label>Equipamento</label><select id="pr-equip"></select></div><div class="field"><label>Tipo</label><select id="pr-tipo"><option>Preventiva</option><option>Preditiva</option><option>Lubrificação</option><option>Inspeção</option><option>Calibração</option></select></div></div>
     <div class="form-grid g3"><div class="field"><label>Data prevista</label><input type="date" id="pr-data"/></div><div class="field"><label>Frequência (dias)</label><input type="number" id="pr-freq" value="30" min="1"/></div><div class="field"><label>Responsável</label><select id="pr-resp"></select></div></div>
     <div class="form-grid g1"><div class="field full"><label>Procedimento</label><textarea id="pr-proc" placeholder="Descreva o procedimento..."></textarea></div></div>
-    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-prev')">Cancelar</button><button class="btn btn-p" id="prev-save-btn" onclick="savePrev()">Agendar</button></div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-prev')">Cancelar</button><button class="btn btn-p" id="prev-save-btn" onclick="savePCMPrev()">Agendar</button></div>
   </div>
 </div>
 
 <div class="modal-ov" id="m-equip">
   <div class="modal">
     <div class="modal-hdr"><span class="modal-title">Cadastrar Equipamento</span><button class="close-btn" onclick="closeModal('m-equip')">×</button></div>
-    <div class="form-grid"><div class="field"><label>Código</label><input id="eq-cod" placeholder="EQ-006"/></div><div class="field"><label>Nome</label><input id="eq-nome" placeholder="Ex: Dosador Volumétrico"/></div></div>
+    <div class="form-grid"><div class="field"><label>Código</label><input id="eq-cod" placeholder="EQ-001"/></div><div class="field"><label>Nome</label><input id="eq-nome" placeholder="Ex: Dosador Volumétrico"/></div></div>
     <div class="form-grid"><div class="field"><label>Linha / Área</label><select id="eq-linha"></select></div><div class="field"><label>Localização</label><input id="eq-local" placeholder="Ex: Setor A"/></div></div>
     <div class="form-grid g3"><div class="field"><label>Fabricante</label><input id="eq-fab"/></div><div class="field"><label>Modelo</label><input id="eq-mod"/></div><div class="field"><label>Nº Série</label><input id="eq-ser" style="font-family:var(--mono)"/></div></div>
     <div class="form-grid"><div class="field"><label>Data Instalação</label><input type="date" id="eq-dt"/></div><div class="field"><label>Criticidade</label><select id="eq-crit"><option>Alta</option><option>Média</option><option>Baixa</option></select></div></div>
     <div class="form-grid g1"><div class="field full"><label>Observações</label><textarea id="eq-obs"></textarea></div></div>
-    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-equip')">Cancelar</button><button class="btn btn-p" onclick="saveEquip()">Cadastrar</button></div>
-  </div>
-</div>
-
-<div class="modal-ov" id="m-colab">
-  <div class="modal">
-    <div class="modal-hdr"><span class="modal-title">Cadastrar Colaborador</span><button class="close-btn" onclick="closeModal('m-colab')">×</button></div>
-    <div class="form-grid"><div class="field"><label>Nome completo</label><input id="co-nome"/></div><div class="field"><label>Matrícula</label><input id="co-mat"/></div></div>
-    <div class="form-grid"><div class="field"><label>E-mail</label><input type="email" id="co-email"/></div><div class="field"><label>Senha</label><input type="password" id="co-pass" placeholder="Mínimo 6 caracteres"/></div></div>
-    <div class="form-grid g3"><div class="field"><label>Cargo</label><input id="co-cargo" placeholder="Ex: Mecânico Sênior"/></div><div class="field"><label>Especialidade</label><select id="co-esp"><option>Mecânica</option><option>Elétrica</option><option>Eletromecânica</option><option>Instrumentação</option><option>Hidráulica</option><option>Pneumática</option></select></div><div class="field"><label>Perfil</label><select id="co-role"><option value="tecnico">Técnico</option><option value="gestor">Gestor</option><option value="admin">Admin</option></select></div></div>
-    <div class="form-grid g1"><div class="field full"><label>Telefone</label><input id="co-tel" placeholder="(XX) XXXXX-XXXX"/></div></div>
-    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-colab')">Cancelar</button><button class="btn btn-p" onclick="saveColab()">Cadastrar</button></div>
-  </div>
-</div>
-
-<div class="modal-ov" id="m-conta">
-  <div class="modal">
-    <div class="modal-hdr"><span class="modal-title">⚙ Minha Conta</span><button class="close-btn" onclick="closeModal('m-conta')">×</button></div>
-    <div style="padding:18px;border-bottom:0.5px solid var(--border);">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;">
-        <div id="conta-avatar" style="width:48px;height:48px;border-radius:50%;background:var(--nav);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:#38bdf8;flex-shrink:0;"></div>
-        <div><div id="conta-nome" style="font-size:16px;font-weight:600;"></div><div id="conta-email" style="font-size:13px;color:var(--muted);"></div><div id="conta-role" style="margin-top:4px;"></div></div>
-      </div>
-    </div>
-    <div style="padding:18px;border-bottom:0.5px solid var(--border);">
-      <div style="font-size:13px;font-weight:600;margin-bottom:14px;">Alterar Senha</div>
-      <div class="form-grid g1" style="padding:0;gap:10px;">
-        <div class="field"><label>Senha Atual</label><input type="password" id="senha-atual" placeholder="Digite sua senha atual"/></div>
-        <div class="field"><label>Nova Senha</label><input type="password" id="senha-nova" placeholder="Mínimo 6 caracteres"/></div>
-        <div class="field"><label>Confirmar Nova Senha</label><input type="password" id="senha-conf" placeholder="Repita a nova senha"/></div>
-      </div>
-    </div>
-    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-conta')">Fechar</button><button class="btn btn-p" onclick="salvarSenha()">Salvar Nova Senha</button></div>
-  </div>
-</div>
-
-<div class="modal-ov" id="m-edit-user">
-  <div class="modal">
-    <div class="modal-hdr"><span class="modal-title">Editar Colaborador</span><button class="close-btn" onclick="closeModal('m-edit-user')">×</button></div>
-    <input type="hidden" id="edit-user-id"/>
-    <div class="form-grid"><div class="field"><label>Nome completo</label><input id="edit-nome"/></div><div class="field"><label>Cargo</label><input id="edit-cargo"/></div></div>
-    <div class="form-grid g3"><div class="field"><label>Especialidade</label><select id="edit-esp"><option>Mecânica</option><option>Elétrica</option><option>Eletromecânica</option><option>Instrumentação</option><option>Hidráulica</option><option>Pneumática</option></select></div><div class="field"><label>Perfil</label><select id="edit-role"><option value="tecnico">Técnico</option><option value="gestor">Gestor</option><option value="admin">Admin</option></select></div><div class="field"><label>Telefone</label><input id="edit-tel"/></div></div>
-    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-edit-user')">Cancelar</button><button class="btn btn-p" onclick="saveEditUser()">Salvar</button></div>
-  </div>
-</div>
-
-<div class="modal-ov" id="m-nova-linha">
-  <div class="modal" style="max-width:420px;">
-    <div class="modal-hdr"><span class="modal-title" id="linha-modal-title">Nova Linha / Área</span><button class="close-btn" onclick="closeModal('m-nova-linha')">×</button></div>
-    <input type="hidden" id="linha-edit-idx"/>
-    <div class="form-grid g1" style="padding:18px;gap:12px;">
-      <div class="field"><label>Nome da Linha / Área</label><input id="linha-nome" placeholder="Ex: Linha 6 - Sachê"/></div>
-    </div>
-    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-nova-linha')">Cancelar</button><button class="btn btn-p" onclick="salvarLinha()">Salvar</button></div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-equip')">Cancelar</button><button class="btn btn-p" onclick="savePCMEquip()">Cadastrar</button></div>
   </div>
 </div>
 
@@ -391,310 +342,425 @@ textarea{resize:vertical;min-height:70px;}
   <div class="modal">
     <div class="modal-hdr"><span class="modal-title">Editar Equipamento</span><button class="close-btn" onclick="closeModal('m-edit-equip')">×</button></div>
     <input type="hidden" id="eeq-id"/>
-    <div class="form-grid"><div class="field"><label>Código</label><input id="eeq-cod" placeholder="Ex: EQ-001"/></div><div class="field"><label>Nome</label><input id="eeq-nome"/></div></div>
+    <div class="form-grid"><div class="field"><label>Código</label><input id="eeq-cod"/></div><div class="field"><label>Nome</label><input id="eeq-nome"/></div></div>
     <div class="form-grid"><div class="field"><label>Linha / Área</label><select id="eeq-linha"></select></div><div class="field"><label>Localização</label><input id="eeq-local"/></div></div>
     <div class="form-grid g3"><div class="field"><label>Fabricante</label><input id="eeq-fab"/></div><div class="field"><label>Modelo</label><input id="eeq-mod"/></div><div class="field"><label>Nº Série</label><input id="eeq-ser" style="font-family:var(--mono)"/></div></div>
     <div class="form-grid"><div class="field"><label>Criticidade</label><select id="eeq-crit"><option>Alta</option><option>Média</option><option>Baixa</option></select></div><div class="field"><label>Data Instalação</label><input type="date" id="eeq-dt"/></div></div>
     <div class="form-grid g1"><div class="field full"><label>Observações</label><textarea id="eeq-obs"></textarea></div></div>
-    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-edit-equip')">Cancelar</button><button class="btn btn-p" onclick="saveEditEquip()">Salvar</button></div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-edit-equip')">Cancelar</button><button class="btn btn-p" onclick="savePCMEditEquip()">Salvar</button></div>
   </div>
 </div>
 
-<div class="toast" id="toast"><span id="toast-txt"></span></div>
+<div class="modal-ov" id="m-nova-linha">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-hdr"><span class="modal-title" id="linha-modal-title">Nova Linha / Área</span><button class="close-btn" onclick="closeModal('m-nova-linha')">×</button></div>
+    <input type="hidden" id="linha-edit-idx"/>
+    <div class="form-grid g1" style="padding:16px;gap:10px;"><div class="field"><label>Nome da Linha / Área</label><input id="linha-nome" placeholder="Ex: Linha 6 - Sachê"/></div></div>
+    <div class="modal-ftr"><button class="btn btn-s" onclick="closeModal('m-nova-linha')">Cancelar</button><button class="btn btn-p" onclick="salvarLinha()">Salvar</button></div>
+  </div>
+</div>
+
+<!-- MODAL USUÁRIO ADMIN - editar usuário na lista do PCM não se aplica; colaboradores são do portal -->
 
 <script>
+/* ══════════════════════════════════════════════════════════════
+   ESTADO GLOBAL
+══════════════════════════════════════════════════════════════ */
 const API = '';
-let TOKEN = localStorage.getItem('pcm_token') || '';
-let USER = JSON.parse(localStorage.getItem('pcm_user') || 'null');
-let charts = {};
-let equipList = [], userList = [];
+let TOKEN = localStorage.getItem('qportal_token') || null;
+let ME = null;
+let USERS_CACHE = [];
+let PCM_EQUIPS = []; // cache equipamentos PCM
+let PCM_USERS  = []; // portal_users com acesso_pcm
+let PCM_CHARTS = {};
 
-async function api(path, opts = {}) {
-  const res = await fetch(API + path, {
-    headers: { 'Content-Type': 'application/json', ...(TOKEN ? { 'Authorization': 'Bearer ' + TOKEN } : {}) },
-    ...opts
-  });
-  if (res.status === 401) { logout(); return null; }
-  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.detail || 'Erro'); }
-  return res.json();
+const MODULES = [
+  {key:'pcm',      label:'Manutenção', icon:'🔧', desc:'Ordens de serviço e planos preventivos', color:'card-pcm', acesso:'acesso_pcm'},
+  {key:'pd',       label:'P&D',        icon:'🔬', desc:'Projetos e desenvolvimento de produtos',  color:'card-pd',  acesso:'acesso_pd'},
+  {key:'producao', label:'Produção',   icon:'🏭', desc:'Controle de linhas e ordens de produção', color:'card-prod',acesso:'acesso_producao'},
+  {key:'pcp',      label:'PCP',        icon:'📋', desc:'Planejamento e controle de produção',     color:'card-pcp', acesso:'acesso_pcp'},
+  {key:'rh',       label:'RH',         icon:'👥', desc:'Colaboradores, ponto e folha salarial',   color:'card-rh',  acesso:'acesso_rh'},
+  {key:'demandas', label:'Demandas',   icon:'📌', desc:'Gestão de tarefas e solicitações',        color:'card-dem', acesso:'acesso_demandas'},
+  {key:'logistica',label:'Logística',  icon:'🚛', desc:'Carregamentos e programações',            color:'card-log', acesso:'acesso_logistica'},
+];
+const ROLE_LABELS = {superadmin:'Superadmin',admin:'Administrador',usuario:'Usuário',gestor:'Gestor',tecnico:'Técnico'};
+
+/* ══════════════════════════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════════════════════════ */
+function apiCall(path, opts={}) {
+  const h = {'Content-Type':'application/json'};
+  if (TOKEN) h['Authorization'] = 'Bearer ' + TOKEN;
+  return fetch(API + path, {headers:h, ...opts});
+}
+function toast(msg, ok=true) {
+  const t = document.getElementById('toast');
+  t.textContent = (ok?'✓ ':'✗ ') + msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3200);
+}
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openConta() { loadContaInfo(); document.getElementById('modal-conta').classList.add('open'); }
+function closeConta() { document.getElementById('modal-conta').classList.remove('open'); }
+function initials(n) { return (n||'?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+function fmtDate(d) { if(!d) return '—'; const [y,m,dd]=d.toString().slice(0,10).split('-'); return `${dd}/${m}/${y}`; }
+function today() { return new Date().toISOString().slice(0,10); }
+function confirmAction(title, text, onOk) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-text').textContent  = text;
+  document.getElementById('confirm-ok').onclick = ()=>{ closeModal('modal-confirm'); onOk(); };
+  openModal('modal-confirm');
+}
+document.querySelectorAll('.modal-ov').forEach(o => o.addEventListener('click', e=>{ if(e.target===o) o.classList.remove('open'); }));
+document.getElementById('modal-conta').addEventListener('click', e=>{ if(e.target===document.getElementById('modal-conta')) closeConta(); });
+
+/* ══════════════════════════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════════════════════════ */
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const err   = document.getElementById('login-error');
+  const btn   = document.getElementById('btn-login');
+  err.style.display = 'none';
+  if (!email||!senha) { err.textContent='Preencha e-mail e senha.'; err.style.display='block'; return; }
+  btn.textContent='Entrando...'; btn.disabled=true;
+  try {
+    const body = new URLSearchParams({username:email, password:senha});
+    const r = await fetch('/api/auth/token', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body});
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail||'E-mail ou senha incorretos.');
+    TOKEN = data.access_token;
+    localStorage.setItem('qportal_token', TOKEN);
+    await loadMe();
+    showApp();
+  } catch(e) { err.textContent=e.message; err.style.display='block'; }
+  finally { btn.textContent='Entrar'; btn.disabled=false; }
+}
+async function loadMe() {
+  const r = await apiCall('/api/auth/me');
+  if (!r.ok) { doLogout(); return; }
+  ME = await r.json();
+}
+function doLogout() {
+  TOKEN=null; ME=null;
+  localStorage.removeItem('qportal_token');
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-login').classList.add('active');
+  document.getElementById('login-senha').value='';
 }
 
-async function doLogin() {
-  const email = document.getElementById('login-email').value;
-  const pass = document.getElementById('login-pass').value;
-  const err = document.getElementById('login-error');
-  err.style.display = 'none';
-  try {
-    const res = await fetch('/api/auth/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pass })
+/* ══════════════════════════════════════════════════════════════
+   APP SHELL
+══════════════════════════════════════════════════════════════ */
+function showApp() {
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  document.getElementById('sb-avatar').textContent = initials(ME.nome);
+  document.getElementById('sb-nome').textContent   = ME.nome.split(' ')[0];
+  document.getElementById('sb-role').textContent   = ROLE_LABELS[ME.role_portal]||ME.role_portal;
+  buildSidebar();
+  navigateTo('home');
+}
+
+function buildSidebar(activePCMSub=null) {
+  const isAdmin = ME.role_portal==='admin'||ME.role_portal==='superadmin';
+  const myModules = MODULES.filter(m=>ME[m.acesso]);
+  let html = `<div class="sidebar-section">Menu</div>`;
+  html += snavItem('home','🏠','Início', 'home');
+  if (myModules.length) {
+    html += `<div class="sidebar-section">Módulos</div>`;
+    myModules.forEach(m => {
+      if (m.key==='pcm') {
+        html += snavItem('pcm','🔧','Manutenção','pcm');
+        if (activePCMSub) {
+          html += snavItemSub('pcm-dash','📊','Dashboard',  ()=>pcmNav('dash',null),  activePCMSub==='dash');
+          html += snavItemSub('pcm-os',  '📋','Ordens de Serviço', ()=>pcmNav('os',null),  activePCMSub==='os');
+          html += snavItemSub('pcm-ag',  '🔁','Programação',  ()=>pcmNav('agenda',null), activePCMSub==='agenda');
+          html += snavItemSub('pcm-eq',  '⚙️','Equipamentos', ()=>pcmNav('equip',null), activePCMSub==='equip');
+          html += snavItemSub('pcm-rel', '📊','Relatórios',   ()=>pcmNav('rel',null),   activePCMSub==='rel');
+          html += snavItemSub('pcm-cfg', '⚙','Configurações', ()=>pcmNav('config',null),activePCMSub==='config');
+        }
+      } else {
+        html += snavItem(m.key, m.icon, m.label, m.key);
+      }
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'E-mail ou senha incorretos');
-    if (!data || !data.access_token) throw new Error('Resposta invalida do servidor');
-    TOKEN = data.access_token;
-    USER = data.user;
-    localStorage.setItem('pcm_token', TOKEN);
-    localStorage.setItem('pcm_user', JSON.stringify(USER));
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app-screen').style.display = 'flex';
-    document.getElementById('nav-nome').textContent = USER.nome.split(' ')[0];
-    await loadMeta();
-    loadDash();
-  } catch(e) {
-    err.textContent = e.message;
-    err.style.display = 'block';
+  }
+  if (isAdmin) {
+    html += `<div class="sidebar-section">Administração</div>`;
+    html += snavItem('admin-users','👤','Usuários','admin-users');
+  }
+  html += `<div class="sidebar-section">Conta</div>`;
+  html += `<div class="snav" onclick="openConta()"><span class="snav-icon">⚙️</span>Minha Conta</div>`;
+  document.getElementById('sidebar-nav').innerHTML = html;
+}
+
+function snavItem(id, icon, label, navKey) {
+  return `<div class="snav" id="snav-${id}" onclick="navigateTo('${navKey}')"><span class="snav-icon">${icon}</span>${label}</div>`;
+}
+function snavItemSub(id, icon, label, fn, active=false) {
+  return `<div class="snav snav-sub${active?' active':''}" id="${id}" onclick="(${fn.toString()})()" ><span class="snav-icon" style="font-size:12px">${icon}</span>${label}</div>`;
+}
+
+function setActiveNav(id) {
+  document.querySelectorAll('.snav').forEach(el=>el.classList.remove('active'));
+  const el = document.getElementById('snav-'+id);
+  if (el) el.classList.add('active');
+}
+
+function navigateTo(section) {
+  if (section!=='pcm' && !section.startsWith('pcm-')) {
+    buildSidebar(null);
+  }
+  setActiveNav(section);
+  const mc = document.getElementById('main-content');
+  mc.innerHTML = '<div class="loading">Carregando...</div>';
+  switch(section) {
+    case 'home':       renderHome();      break;
+    case 'admin-users':renderAdminUsers();break;
+    case 'pcm':        renderPCM();       break;
+    default:           renderPlaceholder(section); break;
   }
 }
 
-function logout() {
-  TOKEN = ''; USER = null;
-  localStorage.removeItem('pcm_token');
-  localStorage.removeItem('pcm_user');
-  document.getElementById('app-screen').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
+/* ══════════════════════════════════════════════════════════════
+   HOME
+══════════════════════════════════════════════════════════════ */
+async function renderHome() {
+  const mc = document.getElementById('main-content');
+  let stats = {};
+  try { const r=await apiCall('/api/dashboard/stats'); if(r.ok) stats=await r.json(); } catch(e){}
+  const myModules = MODULES.filter(m=>ME[m.acesso]);
+  const h = new Date().getHours();
+  const saudacao = h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
+  const isAdmin = ME.role_portal==='admin'||ME.role_portal==='superadmin';
+  let html = `<div class="home-greeting"><h1>${saudacao}, ${ME.nome.split(' ')[0]}! 👋</h1><p>Em que módulo vamos trabalhar hoje?</p></div>`;
+  if (isAdmin) {
+    html += `<div class="home-stats-row">
+      <div class="home-stat-card"><div class="lbl">Usuários ativos</div><div class="val">${stats.usuarios_ativos??'—'}</div><div class="sub">de ${stats.total_usuarios??'—'} cadastrados</div></div>
+      <div class="home-stat-card"><div class="lbl">Administradores</div><div class="val">${stats.administradores??'—'}</div><div class="sub">com acesso total</div></div>
+      <div class="home-stat-card"><div class="lbl">Módulos</div><div class="val">${myModules.length}</div><div class="sub">de ${MODULES.length} disponíveis</div></div>
+    </div>`;
+  }
+  if (!myModules.length) {
+    html += `<div class="mod-placeholder"><div class="mod-placeholder-icon">🔒</div><h2>Sem módulos liberados</h2><p>Você ainda não tem acesso a nenhum módulo. Solicite ao administrador.</p></div>`;
+  } else {
+    html += `<div class="modules-grid">`;
+    myModules.forEach(m => {
+      html += `<div class="mod-card ${m.color}" onclick="navigateTo('${m.key}')"><span class="mod-card-icon">${m.icon}</span><div class="mod-card-name">${m.label}</div><div class="mod-card-desc">${m.desc}</div></div>`;
+    });
+    if (isAdmin) html += `<div class="mod-card card-adm" onclick="navigateTo('admin-users')"><span class="mod-card-icon">⚙️</span><div class="mod-card-name">Administração</div><div class="mod-card-desc">Usuários e permissões do sistema</div></div>`;
+    html += `</div>`;
+  }
+  mc.innerHTML = html;
 }
 
-async function loadMeta() {
-  const [equips, users] = await Promise.all([api('/api/equipamentos/'), api('/api/users/')]);
-  equipList = equips || [];
-  userList = users || [];
-  ['os-equip','pr-equip','eq-linha-sel'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-  });
-  const fillEquip = (id) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.innerHTML = '<option value="">— Selecionar —</option>' + equipList.map(e => `<option value="${e.id}">${e.nome} (${e.linha})</option>`).join('');
-  };
-  const fillUser = (id) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.innerHTML = '<option value="">— Selecionar —</option>' + userList.map(u => `<option value="${u.id}">${u.nome}</option>`).join('');
-  };
-  fillEquip('os-equip'); fillEquip('pr-equip');
-  fillUser('os-resp'); fillUser('pr-resp');
-  populateLinhasSelects();
+/* ══════════════════════════════════════════════════════════════
+   PLACEHOLDER
+══════════════════════════════════════════════════════════════ */
+function renderPlaceholder(key) {
+  const m = MODULES.find(x=>x.key===key);
+  document.getElementById('main-content').innerHTML = `<div class="mod-placeholder"><div class="mod-placeholder-icon">${m?m.icon:'📦'}</div><h2>${m?m.label:key} — Em breve</h2><p>Este módulo está sendo integrado ao portal.</p></div>`;
 }
 
-function nav(id, btn) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('s-' + id).classList.add('active');
-  btn.classList.add('active');
-  const loaders = { os: loadOS, agenda: loadAgenda, equip: loadEquip, colabs: loadColabs, rel: loadRel, config: loadConfig };
+/* ══════════════════════════════════════════════════════════════
+   PCM — MANUTENÇÃO (idêntico ao sistema original)
+══════════════════════════════════════════════════════════════ */
+async function renderPCM() {
+  buildSidebar('dash');
+  setActiveNav('pcm');
+  const mc = document.getElementById('main-content');
+  // Carrega metadados
+  await loadPCMMeta();
+  // Monta estrutura HTML idêntica ao original
+  mc.innerHTML = `
+  <div class="pcm-wrap">
+    <nav class="pcm-nav">
+      <div class="pcm-logo"><span class="pcm-logo-t">PCM</span><span class="pcm-logo-b">v2</span></div>
+      <button class="pcm-btn active" id="pcm-nav-dash"  onclick="pcmNav('dash',this)">▦ Dashboard</button>
+      <button class="pcm-btn" id="pcm-nav-os"    onclick="pcmNav('os',this)">≡ Ordens de Serviço</button>
+      <button class="pcm-btn" id="pcm-nav-agenda" onclick="pcmNav('agenda',this)">◫ Programação</button>
+      <button class="pcm-btn" id="pcm-nav-equip" onclick="pcmNav('equip',this)">⊞ Equipamentos</button>
+      <button class="pcm-btn" id="pcm-nav-rel"   onclick="pcmNav('rel',this)">⊟ Relatórios</button>
+      <button class="pcm-btn" id="pcm-nav-config" onclick="pcmNav('config',this)">⚙ Configurações</button>
+      <div class="pcm-spacer"></div>
+      <div class="pcm-user"><span class="pcm-user-name">${ME.nome.split(' ')[0]}</span></div>
+    </nav>
+    <div class="pcm-inner" id="pcm-inner">
+      <div class="pcm-screen active" id="pcm-s-dash"></div>
+      <div class="pcm-screen" id="pcm-s-os"></div>
+      <div class="pcm-screen" id="pcm-s-agenda"></div>
+      <div class="pcm-screen" id="pcm-s-equip"></div>
+      <div class="pcm-screen" id="pcm-s-rel"></div>
+      <div class="pcm-screen" id="pcm-s-config"></div>
+    </div>
+  </div>`;
+  pcmLoadDash();
+}
+
+function pcmNav(id, btn) {
+  document.querySelectorAll('.pcm-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.pcm-screen').forEach(s=>s.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  else {
+    const b = document.getElementById('pcm-nav-'+id);
+    if (b) b.classList.add('active');
+  }
+  const s = document.getElementById('pcm-s-'+id);
+  if (s) { s.classList.add('active'); s.innerHTML='<div class="loading">Carregando...</div>'; }
+  const subMap = {dash:'dash',os:'os',agenda:'agenda',equip:'equip',rel:'rel',config:'config'};
+  buildSidebar(subMap[id]||id);
+  const loaders = {dash:pcmLoadDash, os:pcmLoadOS, agenda:pcmLoadAgenda, equip:pcmLoadEquip, rel:pcmLoadRel, config:pcmLoadConfig};
   if (loaders[id]) loaders[id]();
 }
 
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-ov').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); }));
-
-function toast(msg, ok = true) {
-  const t = document.getElementById('toast');
-  document.getElementById('toast-txt').textContent = (ok ? '✓ ' : '✗ ') + msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+async function loadPCMMeta() {
+  try {
+    const [eR, uR] = await Promise.all([apiCall('/api/pcm/equipamentos/'), apiCall('/api/users/')]);
+    PCM_EQUIPS = eR.ok ? await eR.json() : [];
+    const allU = uR.ok ? await uR.json() : [];
+    PCM_USERS = allU.filter(u=>u.acesso_pcm && u.is_active);
+  } catch(e){}
+  fillPCMSelects();
 }
 
-function typeBadge(t) {
-  const m = { 'Corretiva': 'br', 'Preventiva': 'bb', 'Preditiva': 'bp', 'Melhoria': 'bg' };
-  return `<span class="badge ${m[t] || 'bgy'}">${t}</span>`;
-}
-function statusBadge(s) {
-  const m = { 'Concluída': 'bg', 'Em andamento': 'bb', 'Aberta': 'ba', 'Aguardando peça': 'br', 'Cancelada': 'bgy' };
-  return `<span class="badge ${m[s] || 'bgy'}">${s}</span>`;
-}
-function critBadge(c) {
-  const m = { 'Alta': 'br', 'Média': 'ba', 'Baixa': 'bg' };
-  return `<span class="badge ${m[c] || 'bgy'}">${c}</span>`;
-}
-function roleBadge(r) {
-  const m = { 'admin': 'br', 'gestor': 'bp', 'tecnico': 'bb' };
-  const l = { 'admin': 'Admin', 'gestor': 'Gestor', 'tecnico': 'Técnico' };
-  return `<span class="badge ${m[r] || 'bgy'}">${l[r] || r}</span>`;
+function fillPCMSelects() {
+  const eqOpts = '<option value="">— Selecionar —</option>' + PCM_EQUIPS.map(e=>`<option value="${e.id}">${e.nome} (${e.linha||'—'})</option>`).join('');
+  const uOpts  = '<option value="">— Selecionar —</option>' + PCM_USERS.map(u=>`<option value="${u.id}">${u.nome}</option>`).join('');
+  ['os-equip','pr-equip'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=eqOpts; });
+  ['os-resp','pr-resp'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=uOpts; });
+  populateLinhasSelects();
 }
 
-// ── DASHBOARD ────────────────────────────────────────────────
-async function loadDash() {
-  const d = await api('/api/dashboard/stats');
-  if (!d) return;
+// Badges idênticos ao original
+function typeBadge(t) { const m={'Corretiva':'br','Preventiva':'bb','Preditiva':'bp','Melhoria':'bg'}; return `<span class="badge ${m[t]||'bgy'}">${t||'—'}</span>`; }
+function statusBadge(s) { const m={'Concluída':'bg','concluida':'bg','Em andamento':'bb','em_andamento':'bb','Aberta':'ba','aberta':'ba','Aguardando peça':'br','Cancelada':'bgy','cancelada':'bgy'}; const l={'aberta':'Aberta','em_andamento':'Em andamento','concluida':'Concluída','cancelada':'Cancelada'}; return `<span class="badge ${m[s]||'bgy'}">${l[s]||s||'—'}</span>`; }
+function critBadge(c) { const m={'Alta':'br','Média':'ba','Baixa':'bg','alta':'br','media':'ba','baixa':'bg'}; const l={'alta':'Alta','media':'Média','baixa':'Baixa'}; return `<span class="badge ${m[c]||'bgy'}">${l[c]||c||'—'}</span>`; }
+
+/* PCM DASHBOARD */
+async function pcmLoadDash() {
+  const el = document.getElementById('pcm-s-dash'); if(!el) return;
+  const [statsR, prevR] = await Promise.all([apiCall('/api/pcm/dashboard/stats'), apiCall('/api/pcm/dashboard/preventivas-vencidas')]);
+  const d = statsR.ok ? await statsR.json() : {};
+  const prev7 = prevR.ok ? await prevR.json() : [];
+
   const now = new Date();
-  document.getElementById('dash-sub').textContent = `Visão geral — ${now.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`;
-
   const mets = [
-    ['Total OS', d.total_os, '#38bdf8', 'Todas as ordens'],
-    ['Concluídas', d.os_concluidas, '#22c55e', d.total_os ? Math.round(d.os_concluidas/d.total_os*100)+'% de conclusão' : '—'],
-    ['Pendentes', d.os_pendentes, '#f59e0b', 'Em aberto'],
-    ['Em andamento', d.os_em_andamento, '#38bdf8', 'Em execução'],
-    ['Tempo total', d.tempo_total_horas + 'h', '#f97316', 'Horas trabalhadas'],
-    ['Equipamentos', d.total_equipamentos, '#a78bfa', 'Cadastrados'],
-    ['Corretivas', d.os_corretivas, '#ef4444', 'Manutenção reativa'],
-    ['Prev. vencendo', d.preventivas_vencendo, '#f59e0b', 'Próximos 7 dias'],
+    ['Total OS', d.total_os??0, '#38bdf8', 'Todas as ordens'],
+    ['Concluídas', d.os_concluidas??0, '#22c55e', d.total_os ? Math.round((d.os_concluidas??0)/(d.total_os)*100)+'% de conclusão' : '—'],
+    ['Pendentes', d.os_abertas??0, '#f59e0b', 'Em aberto'],
+    ['Em andamento', d.os_em_andamento??0, '#38bdf8', 'Em execução'],
+    ['Tempo total', (d.mttr??0)+'h', '#f97316', 'MTTR médio'],
+    ['Equipamentos', d.equipamentos_ativos??0, '#a78bfa', 'Cadastrados'],
+    ['Corretivas', 0, '#ef4444', 'Manutenção reativa'],
+    ['Prev. vencendo', d.preventivas_vencidas??0, '#f59e0b', 'Próximos 7 dias'],
   ];
-  document.getElementById('dash-metrics').innerHTML = mets.map(([l, v, c, s]) =>
-    `<div class="mc"><div class="mc-accent" style="background:${c}"></div><div class="mc-lbl">${l}</div><div class="mc-val" style="color:${c}">${v}</div><div class="mc-sub">${s}</div></div>`
-  ).join('');
 
-  renderChartTipo(d);
-  renderChartLinha(d);
+  el.innerHTML = `
+    <div class="page-hdr">
+      <div><div class="page-title">Dashboard</div><div class="page-sub">Visão geral — ${now.toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}</div></div>
+      <button class="btn btn-p btn-sm" onclick="openPCMNovaOS()">+ Nova OS</button>
+    </div>
+    <div class="metrics">${mets.map(([l,v,c,s])=>`<div class="mc"><div class="mc-accent" style="background:${c}"></div><div class="mc-lbl">${l}</div><div class="mc-val" style="color:${c}">${v}</div><div class="mc-sub">${s}</div></div>`).join('')}</div>
+    <div class="two-col" style="margin-bottom:14px;">
+      <div class="card"><div class="card-hdr"><span class="card-title">OS por Tipo</span></div><div style="padding:14px;position:relative;height:190px;"><canvas id="pcm-c-tipo"></canvas></div><div id="pcm-leg-tipo" style="display:flex;flex-wrap:wrap;gap:8px;padding:0 14px 12px;font-size:11px;color:var(--muted);"></div></div>
+      <div class="card"><div class="card-hdr"><span class="card-title">OS por Linha</span></div><div style="padding:14px;position:relative;height:190px;"><canvas id="pcm-c-linha"></canvas></div></div>
+    </div>
+    <div class="two-col">
+      <div class="card"><div class="card-hdr"><span class="card-title">Últimas OS</span></div><div id="pcm-dash-ultimas"><div class="loading">...</div></div></div>
+      <div class="card"><div class="card-hdr"><span class="card-title">Preventivas — Próximos 7 dias</span></div><div id="pcm-dash-prev"><div class="loading">...</div></div></div>
+    </div>`;
 
-  document.getElementById('dash-ultimas').innerHTML = d.ultimas_os.length
-    ? d.ultimas_os.map(o => `<div class="timeline-item"><div class="tl-dot" style="background:${o.tipo==='Corretiva'?'#f97316':'#38bdf8'}"></div><div><div class="tl-title">${o.numero} — ${o.descricao || ''}</div><div class="tl-meta">${o.data} · ${o.linha || ''} · ${o.responsavel} · ${statusBadge(o.status)}</div></div></div>`).join('')
-    : '<div class="empty">Nenhuma OS encontrada</div>';
+  // Gráficos
+  const [tipoR, linhaR] = await Promise.all([apiCall('/api/pcm/dashboard/os-por-tipo'), apiCall('/api/pcm/dashboard/os-por-linha')]);
+  const porTipo  = tipoR.ok  ? await tipoR.json()  : [];
+  const porLinha = linhaR.ok ? await linhaR.json() : [];
 
-  const prev = await api('/api/preventivas/vencendo?dias=7');
-  document.getElementById('dash-prev').innerHTML = prev && prev.length
-    ? prev.map(p => `<div class="timeline-item"><div class="tl-dot" style="background:#22c55e"></div><div><div class="tl-title">${p.equipamento_nome} — ${p.tipo}</div><div class="tl-meta">Prevista: ${new Date(p.proxima_execucao).toLocaleDateString('pt-BR')} · ${p.responsavel_nome || '—'}</div></div></div>`).join('')
-    : '<div class="empty" style="padding:20px">Nenhuma preventiva vencendo em 7 dias ✓</div>';
-}
-
-function renderChartTipo(d) {
-  const ctx = document.getElementById('c-tipo');
-  if (!ctx) return;
-  if (charts['tipo']) charts['tipo'].destroy();
-  const labels = ['Corretiva','Preventiva','Preditiva','Melhoria'];
-  const data = [d.os_corretivas, d.os_preventivas, d.os_preditivas, d.os_melhorias];
-  const colors = ['#f97316','#38bdf8','#a78bfa','#22c55e'];
-  charts['tipo'] = new Chart(ctx, { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-  const total = data.reduce((a,b) => a+b, 0);
-  document.getElementById('leg-tipo').innerHTML = labels.map((l,i) =>
-    `<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};display:inline-block"></span>${l} ${total ? Math.round(data[i]/total*100) : 0}%</span>`
-  ).join('');
-}
-
-function renderChartLinha(d) {
-  const ctx = document.getElementById('c-linha');
-  if (!ctx) return;
-  if (charts['linha']) charts['linha'].destroy();
-  const labels = d.por_linha.map(x => x.linha.replace('Linha ', 'L').replace(' - Sachê','').replace(' - Cartucho',''));
-  const data = d.por_linha.map(x => x.total);
-  charts['linha'] = new Chart(ctx, { type: 'bar', data: { labels, datasets: [{ data, backgroundColor: '#38bdf8', borderRadius: 4, borderSkipped: false }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } } } });
-}
-
-// ── OS ───────────────────────────────────────────────────────
-async function loadOS() {
-  const search = document.getElementById('os-search').value;
-  const tipo = document.getElementById('os-tipo').value;
-  const status = document.getElementById('os-status').value;
-  let url = '/api/os/?limit=100';
-  if (search) url += '&search=' + encodeURIComponent(search);
-  if (tipo) url += '&tipo=' + encodeURIComponent(tipo);
-  if (status) url += '&status=' + encodeURIComponent(status);
-  const ordens = await api(url);
-  if (!ordens) return;
-  document.getElementById('os-table').innerHTML = ordens.length
-    ? `<table><thead><tr><th>Nº OS</th><th>Data</th><th>Equipamento</th><th>Tipo</th><th>Descrição</th><th>Responsável</th><th>Horas</th><th>Status</th><th>Ações</th></tr></thead><tbody>` +
-      ordens.map(o => `<tr>
-        <td><span class="tag">${o.numero}</span></td>
-        <td>${new Date(o.data).toLocaleDateString('pt-BR')}</td>
-        <td><strong>${o.equipamento_nome || o.linha || '—'}</strong>${o.local ? `<br><span style="font-size:11px;color:var(--muted)">${o.local}</span>` : ''}</td>
-        <td>${typeBadge(o.tipo)}</td>
-        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.descricao}</td>
-        <td>${o.responsavel_nome || '—'}</td>
-        <td style="font-family:var(--mono)">${o.tempo_total != null ? o.tempo_total + 'h' : '—'}</td>
-        <td>
-          <select class="status-sel" onchange="changeOSStatus(${o.id}, this.value)" style="font-size:11px;padding:3px 6px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;">
-            <option value="Aberta" ${o.status==='Aberta'?'selected':''}>Aberta</option>
-            <option value="Em andamento" ${o.status==='Em andamento'?'selected':''}>Em andamento</option>
-            <option value="Aguardando peça" ${o.status==='Aguardando peça'?'selected':''}>Aguardando peça</option>
-            <option value="Concluída" ${o.status==='Concluída'?'selected':''}>Concluída</option>
-            <option value="Cancelada" ${o.status==='Cancelada'?'selected':''}>Cancelada</option>
-          </select>
-        </td>
-        <td style="display:flex;gap:5px;">
-          <button class="btn btn-s btn-sm" onclick="editOS(${o.id})">✏ Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteOS(${o.id})">✕</button>
-        </td>
-      </tr>`).join('') +
-      `</tbody></table>`
-    : '<div class="empty">Nenhuma OS encontrada</div>';
-}
-
-async function saveOS() {
-  const id = document.getElementById('os-edit-id').value;
-  const ei = document.getElementById('os-equip').value;
-  const hi = document.getElementById('os-hi').value;
-  const hf = document.getElementById('os-hf').value;
-  let tempo = null;
-  if (hi && hf) {
-    const [hh, mm] = hi.split(':').map(Number);
-    const [hh2, mm2] = hf.split(':').map(Number);
-    tempo = Math.round(((hh2*60+mm2) - (hh*60+mm)) / 60 * 100) / 100;
+  const tipoMap  = {'corretiva':'Corretiva','preventiva':'Preventiva','preditiva':'Preditiva','melhoria':'Melhoria'};
+  const tipoClrs = ['#f97316','#38bdf8','#a78bfa','#22c55e'];
+  const tipoLabels = porTipo.map(x=>tipoMap[x.tipo]||x.tipo||'Outro');
+  const tipoData   = porTipo.map(x=>x.total);
+  if (PCM_CHARTS.tipo) PCM_CHARTS.tipo.destroy();
+  const ctxT = document.getElementById('pcm-c-tipo');
+  if (ctxT && porTipo.length) {
+    PCM_CHARTS.tipo = new Chart(ctxT,{type:'doughnut',data:{labels:tipoLabels,datasets:[{data:tipoData,backgroundColor:tipoClrs,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+    const total = tipoData.reduce((a,b)=>a+b,0);
+    document.getElementById('pcm-leg-tipo').innerHTML = tipoLabels.map((l,i)=>`<span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:${tipoClrs[i]};display:inline-block"></span>${l} ${total?Math.round(tipoData[i]/total*100):0}%</span>`).join('');
   }
-  const payload = {
-    data: document.getElementById('os-data').value || new Date().toISOString(),
-    turno: document.getElementById('os-turno').value,
-    hora_inicio: hi || null, hora_fim: hf || null, tempo_total: tempo,
-    equipamento_id: ei ? parseInt(ei) : null,
-    linha: ei ? (equipList.find(e => e.id == ei)?.linha || null) : null,
-    local: document.getElementById('os-local').value || null,
-    tipo: document.getElementById('os-tipo2').value,
-    descricao: document.getElementById('os-desc').value,
-    materiais: document.getElementById('os-mat').value || null,
-    causa: document.getElementById('os-causa').value || null,
-    responsavel_id: document.getElementById('os-resp').value ? parseInt(document.getElementById('os-resp').value) : null,
-    status: document.getElementById('os-stat').value,
-    observacoes: document.getElementById('os-obs').value || null
-  };
-  try {
-    if (id) {
-      await api('/api/os/' + id, { method: 'PUT', body: JSON.stringify(payload) });
-      toast('OS atualizada!');
-    } else {
-      await api('/api/os/', { method: 'POST', body: JSON.stringify(payload) });
-      toast('OS criada com sucesso!');
-    }
-    closeModal('m-os');
-    loadOS();
-    loadDash();
-  } catch(e) { toast(e.message, false); }
+  if (PCM_CHARTS.linha) PCM_CHARTS.linha.destroy();
+  const ctxL = document.getElementById('pcm-c-linha');
+  if (ctxL && porLinha.length) {
+    PCM_CHARTS.linha = new Chart(ctxL,{type:'bar',data:{labels:porLinha.map(x=>x.linha||'N/A'),datasets:[{data:porLinha.map(x=>x.total),backgroundColor:'#38bdf8',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:10}}}}}});
+  }
+
+  // Últimas OS
+  const osR = await apiCall('/api/pcm/os/?');
+  const osList = osR.ok ? await osR.json() : [];
+  document.getElementById('pcm-dash-ultimas').innerHTML = osList.length
+    ? osList.slice(0,6).map(o=>`<div class="timeline-item"><div class="tl-dot" style="background:${o.tipo==='corretiva'||o.tipo==='Corretiva'?'#f97316':'#38bdf8'}"></div><div><div class="tl-title">${o.numero} — ${o.descricao||''}</div><div class="tl-meta">${fmtDate(o.data)} · ${o.linha||''} · ${statusBadge(o.status)}</div></div></div>`).join('')
+    : '<div class="empty">Nenhuma OS encontrada</div>';
+
+  // Preventivas próximas (vencendo ou vencidas)
+  document.getElementById('pcm-dash-prev').innerHTML = prev7.length
+    ? prev7.slice(0,6).map(p=>{
+        const eq = PCM_EQUIPS.find(e=>e.id===p.equipamento_id);
+        return `<div class="timeline-item"><div class="tl-dot" style="background:#22c55e"></div><div><div class="tl-title">${eq?eq.nome:'—'} — ${p.tipo}</div><div class="tl-meta">Prevista: ${fmtDate(p.proxima_execucao)}</div></div></div>`;
+      }).join('')
+    : '<div class="empty" style="padding:20px">Nenhuma preventiva vencendo ✓</div>';
 }
 
-async function deleteOS(id) {
-  if (!confirm('Remover esta OS?')) return;
-  try { await api('/api/os/' + id, { method: 'DELETE' }); toast('OS removida'); loadOS(); } catch(e) { toast(e.message, false); }
+/* PCM OS */
+async function pcmLoadOS() {
+  const el = document.getElementById('pcm-s-os'); if(!el) return;
+  el.innerHTML = `
+    <div class="page-hdr">
+      <div><div class="page-title">Ordens de Serviço</div><div class="page-sub">Registro e controle</div></div>
+      <button class="btn btn-p" onclick="openPCMNovaOS()">+ Nova OS</button>
+    </div>
+    <div class="filter-bar">
+      <div class="search-wrap"><input type="text" id="os-search" placeholder="Buscar descrição, linha..." oninput="pcmFilterOS()"/></div>
+      <select id="os-tipo" onchange="pcmFilterOS()" style="width:auto;font-size:12px;padding:5px 10px;"><option value="">Todos os tipos</option><option>Corretiva</option><option>Preventiva</option><option>Preditiva</option><option>Melhoria</option></select>
+      <select id="os-status-f" onchange="pcmFilterOS()" style="width:auto;font-size:12px;padding:5px 10px;"><option value="">Todos os status</option><option value="aberta">Aberta</option><option value="em_andamento">Em andamento</option><option value="concluida">Concluída</option><option value="cancelada">Cancelada</option></select>
+    </div>
+    <div class="card"><div class="table-wrap"><div id="os-table"><div class="loading">Carregando...</div></div></div></div>`;
+  await pcmRenderOSTable();
 }
 
-async function editOS(id) {
-  const o = await api('/api/os/' + id);
-  if (!o) return;
-  document.getElementById('os-modal-title').textContent = 'Editar OS — ' + o.numero;
-  document.getElementById('os-save-btn').textContent = 'Salvar Alterações';
-  document.getElementById('os-edit-id').value = o.id;
-  document.getElementById('os-num').value = o.numero;
-  document.getElementById('os-data').value = o.data ? o.data.split('T')[0] : '';
-  document.getElementById('os-turno').value = o.turno || 'Manhã';
-  document.getElementById('os-equip').value = o.equipamento_id || '';
-  document.getElementById('os-local').value = o.local || '';
-  document.getElementById('os-tipo2').value = o.tipo;
-  document.getElementById('os-hi').value = o.hora_inicio || '';
-  document.getElementById('os-hf').value = o.hora_fim || '';
-  document.getElementById('os-desc').value = o.descricao || '';
-  document.getElementById('os-mat').value = o.materiais || '';
-  document.getElementById('os-causa').value = o.causa || '';
-  document.getElementById('os-resp').value = o.responsavel_id || '';
-  document.getElementById('os-stat').value = o.status;
-  document.getElementById('os-obs').value = o.observacoes || '';
-  openModal('m-os');
+let PCM_OS_ALL = [];
+async function pcmRenderOSTable(busca='', tipo='', status='') {
+  let url = '/api/pcm/os/';
+  const r = await apiCall(url);
+  PCM_OS_ALL = r.ok ? await r.json() : [];
+  pcmFilterOS();
 }
 
-async function changeOSStatus(id, status) {
-  try {
-    await api('/api/os/' + id, { method: 'PUT', body: JSON.stringify({ status }) });
-    toast('Status atualizado: ' + status);
-    loadDash();
-  } catch(e) { toast(e.message, false); }
+function pcmFilterOS() {
+  const busca  = (document.getElementById('os-search')?.value||'').toLowerCase();
+  const tipo   = document.getElementById('os-tipo')?.value||'';
+  const status = document.getElementById('os-status-f')?.value||'';
+  const isGestor = ME.role_pcm==='admin'||ME.role_pcm==='gestor'||ME.role_portal==='admin'||ME.role_portal==='superadmin';
+  const filtered = PCM_OS_ALL.filter(o => {
+    const mb = !busca || o.numero.toLowerCase().includes(busca)||o.descricao.toLowerCase().includes(busca)||(o.linha||'').toLowerCase().includes(busca);
+    const mt = !tipo  || (o.tipo||'').toLowerCase()===tipo.toLowerCase();
+    const ms = !status|| o.status===status;
+    return mb&&mt&&ms;
+  });
+  const el = document.getElementById('os-table'); if(!el) return;
+  el.innerHTML = filtered.length ? `<table><thead><tr><th>Nº</th><th>Data</th><th>Equipamento</th><th>Tipo</th><th>Descrição</th><th>Status</th><th>Ações</th></tr></thead><tbody>`+
+    filtered.map(o => {
+      const eq = PCM_EQUIPS.find(e=>e.id===o.equipamento_id);
+      return `<tr><td><strong style="color:#0369a1">${o.numero}</strong></td><td style="white-space:nowrap">${fmtDate(o.data)}</td><td style="font-size:12px">${eq?eq.nome:'—'}</td><td>${typeBadge(o.tipo)}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${o.descricao}">${o.descricao}</td><td>${statusBadge(o.status)}</td><td style="display:flex;gap:5px"><button class="btn btn-s btn-sm" onclick="pcmEditOS(${o.id})">✏ Editar</button>${isGestor?`<button class="btn btn-danger btn-sm" onclick="pcmDeleteOS(${o.id},'${o.numero}')">✕</button>`:''}</td></tr>`;
+    }).join('') + `</tbody></table>`
+    : '<div class="empty">Nenhuma OS encontrada</div>';
 }
 
-function openNovaOS() {
+function openPCMNovaOS() {
   document.getElementById('os-modal-title').textContent = 'Nova Ordem de Serviço';
   document.getElementById('os-save-btn').textContent = 'Salvar OS';
   document.getElementById('os-edit-id').value = '';
   document.getElementById('os-num').value = '';
-  document.getElementById('os-data').value = new Date().toISOString().split('T')[0];
+  document.getElementById('os-data').value = today();
   document.getElementById('os-turno').value = 'Manhã';
   document.getElementById('os-equip').value = '';
   document.getElementById('os-local').value = '';
@@ -710,429 +776,455 @@ function openNovaOS() {
   openModal('m-os');
 }
 
-// ── AGENDA ────────────────────────────────────────────────────
-async function loadAgenda() {
-  const [planos, vencendo] = await Promise.all([api('/api/preventivas/'), api('/api/preventivas/vencendo?dias=7')]);
-  document.getElementById('prev-vencendo').textContent = vencendo?.length ? vencendo.length + ' vencendo' : '';
-
-  document.getElementById('prev-table').innerHTML = planos && planos.length
-    ? `<table><thead><tr><th>Equipamento</th><th>Tipo</th><th>Freq.</th><th>Próxima</th><th>Responsável</th><th>Ações</th></tr></thead><tbody>` +
-      planos.map(p => {
-        const dt = new Date(p.proxima_execucao);
-        const venc = dt < new Date();
-        return `<tr><td>${p.equipamento_nome || '—'}</td><td>${p.tipo}</td><td>${p.frequencia_dias}d</td><td style="color:${venc?'#ef4444':'inherit'}">${dt.toLocaleDateString('pt-BR')}</td><td>${p.responsavel_nome || '—'}</td><td style="display:flex;gap:5px;"><button class="btn btn-s btn-sm" onclick="executarPrev(${p.id})">✓ Executar</button><button class="btn btn-s btn-sm" onclick="editPrev(${p.id})">✏ Editar</button><button class="btn btn-danger btn-sm" onclick="deletePrev(${p.id})">✕</button></td></tr>`;
-      }).join('') + `</tbody></table>`
-    : '<div class="empty">Nenhum plano cadastrado</div>';
-
-  document.getElementById('prev-alert').innerHTML = vencendo && vencendo.length
-    ? vencendo.map(p => `<div class="timeline-item"><div class="tl-dot" style="background:#f59e0b"></div><div><div class="tl-title">${p.equipamento_nome} — ${p.tipo}</div><div class="tl-meta">${new Date(p.proxima_execucao).toLocaleDateString('pt-BR')} · ${p.responsavel_nome || '—'}</div></div></div>`).join('')
-    : '<div class="empty" style="padding:20px">Tudo em dia! Nenhuma preventiva vencendo ✓</div>';
+async function pcmEditOS(id) {
+  const r = await apiCall('/api/pcm/os/'+id);
+  if (!r.ok) return;
+  const o = await r.json();
+  document.getElementById('os-modal-title').textContent = 'Editar OS — '+o.numero;
+  document.getElementById('os-save-btn').textContent = 'Salvar Alterações';
+  document.getElementById('os-edit-id').value = o.id;
+  document.getElementById('os-num').value = o.numero;
+  document.getElementById('os-data').value = o.data?o.data.toString().slice(0,10):'';
+  document.getElementById('os-turno').value = o.turno||'Manhã';
+  document.getElementById('os-equip').value = o.equipamento_id||'';
+  document.getElementById('os-local').value = o.local||'';
+  document.getElementById('os-tipo2').value = o.tipo||'Corretiva';
+  document.getElementById('os-hi').value = o.hora_inicio||'';
+  document.getElementById('os-hf').value = o.hora_fim||'';
+  document.getElementById('os-desc').value = o.descricao||'';
+  document.getElementById('os-mat').value = o.materiais||'';
+  document.getElementById('os-causa').value = o.causa||'';
+  document.getElementById('os-resp').value = o.responsavel_id||'';
+  document.getElementById('os-stat').value = o.status==='aberta'?'Aberta':o.status==='em_andamento'?'Em andamento':o.status==='concluida'?'Concluída':'Cancelada';
+  document.getElementById('os-obs').value = o.observacoes||'';
+  openModal('m-os');
 }
 
-async function savePrev() {
-  const id = document.getElementById('pr-id').value;
+async function savePCMOS() {
+  const id = document.getElementById('os-edit-id').value;
+  const statMap = {'Aberta':'aberta','Em andamento':'em_andamento','Aguardando peça':'em_andamento','Concluída':'concluida','Cancelada':'cancelada'};
+  const hi = document.getElementById('os-hi').value;
+  const hf = document.getElementById('os-hf').value;
+  let tempo = null;
+  if (hi&&hf) { const [ah,am]=hi.split(':').map(Number); const [bh,bm]=hf.split(':').map(Number); tempo=Math.round(((bh*60+bm)-(ah*60+am))/6)/10; }
   const payload = {
-    equipamento_id: parseInt(document.getElementById('pr-equip').value),
-    tipo: document.getElementById('pr-tipo').value,
-    frequencia_dias: parseInt(document.getElementById('pr-freq').value),
-    proxima_execucao: document.getElementById('pr-data').value,
-    responsavel_id: document.getElementById('pr-resp').value ? parseInt(document.getElementById('pr-resp').value) : null,
-    procedimento: document.getElementById('pr-proc').value || null
+    data: document.getElementById('os-data').value,
+    turno: document.getElementById('os-turno').value||null,
+    equipamento_id: parseInt(document.getElementById('os-equip').value)||null,
+    local: document.getElementById('os-local').value||null,
+    tipo: document.getElementById('os-tipo2').value,
+    hora_inicio: hi||null, hora_fim: hf||null, tempo_total: tempo,
+    descricao: document.getElementById('os-desc').value,
+    materiais: document.getElementById('os-mat').value||null,
+    causa: document.getElementById('os-causa').value||null,
+    responsavel_id: parseInt(document.getElementById('os-resp').value)||null,
+    status: statMap[document.getElementById('os-stat').value]||'aberta',
+    observacoes: document.getElementById('os-obs').value||null,
   };
-  if (!payload.equipamento_id || !payload.proxima_execucao) { toast('Preencha equipamento e data', false); return; }
+  if (!payload.descricao) { toast('Informe a descrição.',false); return; }
   try {
-    if (id) {
-      await api('/api/preventivas/' + id, { method: 'PUT', body: JSON.stringify(payload) });
-      toast('Preventiva atualizada!');
-    } else {
-      await api('/api/preventivas/', { method: 'POST', body: JSON.stringify(payload) });
-      toast('Preventiva agendada!');
-    }
-    closeModal('m-prev');
-    loadAgenda();
-  } catch(e) { toast(e.message, false); }
+    if (id) { const r=await apiCall('/api/pcm/os/'+id,{method:'PUT',body:JSON.stringify(payload)}); if(!r.ok){const d=await r.json();throw new Error(d.detail);} toast('OS atualizada!'); }
+    else    { const r=await apiCall('/api/pcm/os/',{method:'POST',body:JSON.stringify(payload)}); if(!r.ok){const d=await r.json();throw new Error(d.detail);} toast('OS criada!'); }
+    closeModal('m-os'); pcmRenderOSTable(); pcmLoadDash();
+  } catch(e) { toast(e.message,false); }
 }
 
-async function executarPrev(id) {
-  try { await api('/api/preventivas/' + id + '/executar', { method: 'POST' }); toast('Execução registrada!'); loadAgenda(); } catch(e) { toast(e.message, false); }
+async function pcmDeleteOS(id, num) {
+  confirmAction('Excluir OS','Remover '+num+'? Esta ação não pode ser desfeita.', async()=>{
+    const r=await apiCall('/api/pcm/os/'+id,{method:'DELETE'}); if(!r.ok){const d=await r.json();toast(d.detail,false);return;} toast('OS removida.'); pcmRenderOSTable();
+  });
 }
 
-async function editPrev(id) {
-  const p = await api('/api/preventivas/');
-  if (!p) return;
-  const plano = p.find(x => x.id === id);
-  if (!plano) return;
-  document.getElementById('prev-modal-title').textContent = 'Editar Preventiva';
-  document.getElementById('prev-save-btn').textContent = 'Salvar';
-  document.getElementById('pr-id').value = plano.id;
-  document.getElementById('pr-equip').value = plano.equipamento_id || '';
-  document.getElementById('pr-tipo').value = plano.tipo;
-  document.getElementById('pr-freq').value = plano.frequencia_dias;
-  document.getElementById('pr-data').value = plano.proxima_execucao ? plano.proxima_execucao.split('T')[0] : '';
-  document.getElementById('pr-resp').value = plano.responsavel_id || '';
-  document.getElementById('pr-proc').value = plano.procedimento || '';
+/* PCM AGENDA */
+async function pcmLoadAgenda() {
+  const el = document.getElementById('pcm-s-agenda'); if(!el) return;
+  const [planosR, vencR] = await Promise.all([apiCall('/api/pcm/preventivas/'), apiCall('/api/pcm/dashboard/preventivas-vencidas')]);
+  const planos  = planosR.ok ? await planosR.json() : [];
+  const vencendo = vencR.ok  ? await vencR.json()  : [];
+
+  el.innerHTML = `
+    <div class="page-hdr">
+      <div><div class="page-title">Programação de Manutenções</div><div class="page-sub">Plano de manutenção preventiva</div></div>
+      <button class="btn btn-p" onclick="openPCMNovaPrev()">+ Agendar</button>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Plano de Preventivas</span>${vencendo.length?`<span class="badge ba">${vencendo.length} vencendo</span>`:''}</div>
+        <div id="prev-table">${pcmRenderPrevTable(planos)}</div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Vencendo / Vencidas</span></div>
+        <div id="prev-alert">${vencendo.length
+          ? vencendo.map(p=>{const eq=PCM_EQUIPS.find(e=>e.id===p.equipamento_id);return `<div class="timeline-item"><div class="tl-dot" style="background:#f59e0b"></div><div><div class="tl-title">${eq?eq.nome:'—'} — ${p.tipo}</div><div class="tl-meta">${fmtDate(p.proxima_execucao)} · ${p.dias_atraso} dia(s) de atraso</div></div></div>`;}).join('')
+          : '<div class="empty" style="padding:20px">Tudo em dia! ✓</div>'}</div>
+      </div>
+    </div>`;
+}
+
+function pcmRenderPrevTable(planos) {
+  if (!planos.length) return '<div class="empty">Nenhum plano cadastrado</div>';
+  const isGestor = ME.role_pcm==='admin'||ME.role_pcm==='gestor'||ME.role_portal==='admin'||ME.role_portal==='superadmin';
+  return `<table><thead><tr><th>Equipamento</th><th>Tipo</th><th>Freq.</th><th>Próxima</th><th>Responsável</th><th>Ações</th></tr></thead><tbody>`+
+    planos.map(p=>{
+      const eq=PCM_EQUIPS.find(e=>e.id===p.equipamento_id);
+      const u=PCM_USERS.find(u=>u.id===p.responsavel_id);
+      const dt=p.proxima_execucao?new Date(p.proxima_execucao+' 12:00'):null;
+      const venc=dt&&dt<new Date();
+      return `<tr><td>${eq?eq.nome:'—'}</td><td>${p.tipo}</td><td>${p.frequencia_dias}d</td><td style="color:${venc?'#dc2626':'inherit'}">${dt?dt.toLocaleDateString('pt-BR'):'—'}</td><td>${u?u.nome:'—'}</td><td style="display:flex;gap:5px"><button class="btn btn-s btn-sm" onclick="pcmExecutarPrev(${p.id})">✓ Executar</button>${isGestor?`<button class="btn btn-s btn-sm" onclick="pcmEditPrev(${p.id})">✏ Editar</button><button class="btn btn-danger btn-sm" onclick="pcmDeletePrev(${p.id})">✕</button>`:''}</td></tr>`;
+    }).join('') + `</tbody></table>`;
+}
+
+function openPCMNovaPrev() {
+  document.getElementById('prev-modal-title').textContent='Agendar Preventiva';
+  document.getElementById('prev-save-btn').textContent='Agendar';
+  document.getElementById('pr-id').value='';
+  document.getElementById('pr-equip').value='';
+  document.getElementById('pr-tipo').value='Preventiva';
+  document.getElementById('pr-freq').value='30';
+  document.getElementById('pr-data').value='';
+  document.getElementById('pr-resp').value='';
+  document.getElementById('pr-proc').value='';
   openModal('m-prev');
 }
 
-function openNovaPrev() {
-  document.getElementById('prev-modal-title').textContent = 'Agendar Preventiva';
-  document.getElementById('prev-save-btn').textContent = 'Agendar';
-  document.getElementById('pr-id').value = '';
-  document.getElementById('pr-equip').value = '';
-  document.getElementById('pr-tipo').value = 'Preventiva';
-  document.getElementById('pr-freq').value = '30';
-  document.getElementById('pr-data').value = '';
-  document.getElementById('pr-resp').value = '';
-  document.getElementById('pr-proc').value = '';
+async function pcmEditPrev(id) {
+  const r=await apiCall('/api/pcm/preventivas/'); if(!r.ok) return;
+  const all=await r.json(); const p=all.find(x=>x.id===id); if(!p) return;
+  document.getElementById('prev-modal-title').textContent='Editar Preventiva';
+  document.getElementById('prev-save-btn').textContent='Salvar';
+  document.getElementById('pr-id').value=p.id;
+  document.getElementById('pr-equip').value=p.equipamento_id||'';
+  document.getElementById('pr-tipo').value=p.tipo;
+  document.getElementById('pr-freq').value=p.frequencia_dias;
+  document.getElementById('pr-data').value=p.proxima_execucao?p.proxima_execucao.toString().slice(0,10):'';
+  document.getElementById('pr-resp').value=p.responsavel_id||'';
+  document.getElementById('pr-proc').value=p.procedimento||'';
   openModal('m-prev');
 }
 
-async function deletePrev(id) {
-  if (!confirm('Excluir esta programação?')) return;
-  try { await api('/api/preventivas/' + id, { method: 'DELETE' }); toast('Programação excluída'); loadAgenda(); } catch(e) { toast(e.message, false); }
+async function savePCMPrev() {
+  const id=document.getElementById('pr-id').value;
+  const eqId=parseInt(document.getElementById('pr-equip').value);
+  const dt=document.getElementById('pr-data').value;
+  if (!eqId||!dt) { toast('Preencha equipamento e data.',false); return; }
+  const payload={equipamento_id:eqId, tipo:document.getElementById('pr-tipo').value, frequencia_dias:parseInt(document.getElementById('pr-freq').value), proxima_execucao:dt, responsavel_id:parseInt(document.getElementById('pr-resp').value)||null, procedimento:document.getElementById('pr-proc').value||null};
+  try {
+    if (id) { const r=await apiCall('/api/pcm/preventivas/'+id,{method:'PUT',body:JSON.stringify(payload)}); if(!r.ok){const d=await r.json();throw new Error(d.detail);} toast('Preventiva atualizada!'); }
+    else    { const r=await apiCall('/api/pcm/preventivas/',{method:'POST',body:JSON.stringify(payload)}); if(!r.ok){const d=await r.json();throw new Error(d.detail);} toast('Preventiva agendada!'); }
+    closeModal('m-prev'); pcmLoadAgenda();
+  } catch(e) { toast(e.message,false); }
 }
 
-// ── EQUIPAMENTOS ──────────────────────────────────────────────
-let allEquips = [];
+async function pcmExecutarPrev(id) {
+  const r=await apiCall('/api/pcm/preventivas/'+id+'/executar',{method:'POST',body:JSON.stringify({data_execucao:today()})});
+  if (!r.ok) { const d=await r.json(); toast(d.detail,false); return; }
+  toast('Execução registrada!'); pcmLoadAgenda();
+}
 
-async function loadEquip() {
-  const equips = await api('/api/equipamentos/');
-  if (!equips) return;
-  allEquips = equips;
-  const linhas = [...new Set(equips.map(e => e.linha).filter(Boolean))];
-  const filterEl = document.getElementById('equip-linha-filter');
-  if (filterEl) {
-    const cur = filterEl.value;
-    filterEl.innerHTML = '<option value="">Todas as linhas</option>' + linhas.map(l => `<option value="${l}" ${l===cur?'selected':''}>${l}</option>`).join('');
-  }
-  renderEquipGrid(equips);
+async function pcmDeletePrev(id) {
+  confirmAction('Excluir Preventiva','Excluir esta programação?', async()=>{
+    const r=await apiCall('/api/pcm/preventivas/'+id,{method:'DELETE'});
+    if(!r.ok){const d=await r.json();toast(d.detail,false);return;} toast('Programação excluída.'); pcmLoadAgenda();
+  });
+}
+
+/* PCM EQUIPAMENTOS */
+let allEquips=[];
+async function pcmLoadEquip() {
+  const el=document.getElementById('pcm-s-equip'); if(!el) return;
+  const equips=await apiCall('/api/pcm/equipamentos/');
+  allEquips = equips.ok ? await equips.json() : [];
+  el.innerHTML=`
+    <div class="page-hdr">
+      <div><div class="page-title">Cadastro de Equipamentos</div><div class="page-sub">Parque de máquinas</div></div>
+      <button class="btn btn-p" onclick="openModal('m-equip')">+ Cadastrar</button>
+    </div>
+    <div class="filter-bar">
+      <div class="search-wrap"><input type="text" id="equip-search" placeholder="Buscar por nome ou código..." oninput="filterEquip()"/></div>
+      <select id="equip-crit-filter" onchange="filterEquip()" style="width:auto;font-size:12px;padding:5px 10px;"><option value="">Todas as criticidades</option><option>Alta</option><option>Média</option><option>Baixa</option></select>
+    </div>
+    <div id="equip-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;"></div>`;
+  renderEquipGrid(allEquips);
+  populateLinhasSelects();
 }
 
 function filterEquip() {
-  const search = (document.getElementById('equip-search')?.value || '').toLowerCase();
-  const linha = document.getElementById('equip-linha-filter')?.value || '';
-  const crit = document.getElementById('equip-crit-filter')?.value || '';
-  const filtered = allEquips.filter(e => {
-    const matchSearch = !search || e.nome.toLowerCase().includes(search) || e.codigo.toLowerCase().includes(search);
-    const matchLinha = !linha || e.linha === linha;
-    const matchCrit = !crit || e.criticidade === crit;
-    return matchSearch && matchLinha && matchCrit;
-  });
-  renderEquipGrid(filtered);
+  const s=(document.getElementById('equip-search')?.value||'').toLowerCase();
+  const c=document.getElementById('equip-crit-filter')?.value||'';
+  renderEquipGrid(allEquips.filter(e=>(!s||e.nome.toLowerCase().includes(s)||e.codigo.toLowerCase().includes(s))&&(!c||e.criticidade===c||e.criticidade?.toLowerCase()===c.toLowerCase())));
 }
 
 function renderEquipGrid(equips) {
-  document.getElementById('equip-grid').innerHTML = equips.map(e => `
+  const el=document.getElementById('equip-grid'); if(!el) return;
+  el.innerHTML=equips.map(e=>`
     <div class="equip-card">
       <div class="equip-card-hdr" style="background:var(--nav);">
         <div class="equip-avatar">⚙</div>
-        <div style="flex:1"><div style="color:#fff;font-size:14px;font-weight:600;">${e.nome}</div><div style="color:#94a3b8;font-size:12px;">${e.codigo} · ${e.linha}</div></div>
+        <div style="flex:1"><div style="color:#fff;font-size:13px;font-weight:600">${e.nome}</div><div style="color:#94a3b8;font-size:11px">${e.codigo} · ${e.linha||'—'}</div></div>
       </div>
-      <div style="padding:12px 16px;">
-        ${e.fabricante ? `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><span style="color:var(--muted)">Fabricante</span><span>${e.fabricante}</span></div>` : ''}
-        ${e.numero_serie ? `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><span style="color:var(--muted)">Nº Série</span><span style="font-family:var(--mono)">${e.numero_serie}</span></div>` : ''}
-        ${e.local ? `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><span style="color:var(--muted)">Local</span><span>${e.local}</span></div>` : ''}
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px;"><span style="color:var(--muted)">Criticidade</span>${critBadge(e.criticidade)}</div>
-        <div style="display:flex;gap:6px;">
-          <button class="btn btn-s btn-sm" style="flex:1" onclick="editEquip(${e.id})">✏ Editar</button>
-          <button class="btn btn-danger btn-sm" style="flex:1" onclick="deleteEquip(${e.id},'${e.nome.replace(/'/g,"\'")}')">✕ Excluir</button>
+      <div style="padding:10px 14px">
+        ${e.fabricante?`<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:var(--muted)">Fabricante</span><span>${e.fabricante}</span></div>`:''}
+        ${e.numero_serie?`<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:var(--muted)">Nº Série</span><span style="font-family:var(--mono)">${e.numero_serie}</span></div>`:''}
+        ${e.local?`<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:var(--muted)">Local</span><span>${e.local}</span></div>`:''}
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px"><span style="color:var(--muted)">Criticidade</span>${critBadge(e.criticidade)}</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-s btn-sm" style="flex:1" onclick="pcmEditEquip(${e.id})">✏ Editar</button>
+          <button class="btn btn-danger btn-sm" style="flex:1" onclick="pcmDeleteEquip(${e.id},'${e.nome.replace(/'/g,"\\'")}')">✕ Excluir</button>
         </div>
       </div>
-    </div>
-  `).join('') + `<div class="equip-card" style="border:1.5px dashed var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;min-height:180px;cursor:pointer;" onclick="openModal('m-equip')"><div style="font-size:28px;color:var(--muted)">+</div><div style="font-size:13px;color:var(--muted)">Cadastrar equipamento</div></div>`;
+    </div>`).join('')+`<div class="equip-card" style="border:1.5px dashed var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;min-height:160px;cursor:pointer" onclick="openModal('m-equip')"><div style="font-size:26px;color:var(--muted)">+</div><div style="font-size:12px;color:var(--muted)">Cadastrar equipamento</div></div>`;
 }
 
-async function saveEquip() {
-  const payload = {
-    codigo: document.getElementById('eq-cod').value,
-    nome: document.getElementById('eq-nome').value,
-    linha: document.getElementById('eq-linha').value,
-    local: document.getElementById('eq-local').value || null,
-    fabricante: document.getElementById('eq-fab').value || null,
-    modelo: document.getElementById('eq-mod').value || null,
-    numero_serie: document.getElementById('eq-ser').value || null,
-    data_instalacao: document.getElementById('eq-dt').value || null,
-    criticidade: document.getElementById('eq-crit').value,
-    observacoes: document.getElementById('eq-obs').value || null
-  };
-  if (!payload.codigo || !payload.nome) { toast('Preencha código e nome', false); return; }
-  try { await api('/api/equipamentos/', { method: 'POST', body: JSON.stringify(payload) }); closeModal('m-equip'); toast('Equipamento cadastrado!'); loadEquip(); await loadMeta(); } catch(e) { toast(e.message, false); }
+async function savePCMEquip() {
+  const linha=document.getElementById('eq-linha')?.value||'';
+  const payload={codigo:document.getElementById('eq-cod').value,nome:document.getElementById('eq-nome').value,linha:linha,local:document.getElementById('eq-local').value||null,fabricante:document.getElementById('eq-fab').value||null,modelo:document.getElementById('eq-mod').value||null,numero_serie:document.getElementById('eq-ser').value||null,data_instalacao:document.getElementById('eq-dt').value||null,criticidade:document.getElementById('eq-crit').value,observacoes:document.getElementById('eq-obs').value||null};
+  if (!payload.codigo||!payload.nome){toast('Preencha código e nome.',false);return;}
+  try { const r=await apiCall('/api/pcm/equipamentos/',{method:'POST',body:JSON.stringify(payload)}); if(!r.ok){const d=await r.json();throw new Error(d.detail);} closeModal('m-equip'); toast('Equipamento cadastrado!'); await loadPCMMeta(); pcmLoadEquip(); } catch(e){toast(e.message,false);}
 }
 
-async function editEquip(id) {
-  const e = await api('/api/equipamentos/' + id);
-  if (!e) return;
-  document.getElementById('eeq-id').value = e.id;
-  document.getElementById('eeq-cod').value = e.codigo;
-  document.getElementById('eeq-nome').value = e.nome;
-  document.getElementById('eeq-linha').value = e.linha;
-  document.getElementById('eeq-local').value = e.local || '';
-  document.getElementById('eeq-fab').value = e.fabricante || '';
-  document.getElementById('eeq-mod').value = e.modelo || '';
-  document.getElementById('eeq-ser').value = e.numero_serie || '';
-  document.getElementById('eeq-crit').value = e.criticidade;
-  document.getElementById('eeq-obs').value = e.observacoes || '';
-  document.getElementById('eeq-dt').value = e.data_instalacao ? e.data_instalacao.split('T')[0] : '';
+async function pcmEditEquip(id) {
+  const e=PCM_EQUIPS.find(x=>x.id===id); if(!e) return;
+  document.getElementById('eeq-id').value=e.id;
+  document.getElementById('eeq-cod').value=e.codigo;
+  document.getElementById('eeq-nome').value=e.nome;
+  document.getElementById('eeq-local').value=e.local||'';
+  document.getElementById('eeq-fab').value=e.fabricante||'';
+  document.getElementById('eeq-mod').value=e.modelo||'';
+  document.getElementById('eeq-ser').value=e.numero_serie||'';
+  document.getElementById('eeq-crit').value=e.criticidade==='alta'?'Alta':e.criticidade==='media'?'Média':'Baixa';
+  document.getElementById('eeq-obs').value=e.observacoes||'';
+  document.getElementById('eeq-dt').value=e.data_instalacao?e.data_instalacao.toString().slice(0,10):'';
+  populateLinhasSelects();
+  setTimeout(()=>{ const el=document.getElementById('eeq-linha'); if(el) el.value=e.linha||''; },50);
   openModal('m-edit-equip');
 }
 
-async function saveEditEquip() {
-  const id = document.getElementById('eeq-id').value;
-  const codigo = document.getElementById('eeq-cod').value.trim();
-  if (!codigo) { toast('Preencha o código', false); return; }
-  const payload = {
-    codigo: codigo,
-    nome: document.getElementById('eeq-nome').value,
-    linha: document.getElementById('eeq-linha').value,
-    local: document.getElementById('eeq-local').value || null,
-    fabricante: document.getElementById('eeq-fab').value || null,
-    modelo: document.getElementById('eeq-mod').value || null,
-    numero_serie: document.getElementById('eeq-ser').value || null,
-    criticidade: document.getElementById('eeq-crit').value,
-    observacoes: document.getElementById('eeq-obs').value || null,
-    data_instalacao: document.getElementById('eeq-dt').value || null
-  };
-  try {
-    await api('/api/equipamentos/' + id, { method: 'PUT', body: JSON.stringify(payload) });
-    closeModal('m-edit-equip');
-    toast('Equipamento atualizado!');
-    loadEquip();
-    await loadMeta();
-  } catch(e) { toast(e.message, false); }
+async function savePCMEditEquip() {
+  const id=document.getElementById('eeq-id').value;
+  const payload={codigo:document.getElementById('eeq-cod').value.trim(),nome:document.getElementById('eeq-nome').value,linha:document.getElementById('eeq-linha')?.value||null,local:document.getElementById('eeq-local').value||null,fabricante:document.getElementById('eeq-fab').value||null,modelo:document.getElementById('eeq-mod').value||null,numero_serie:document.getElementById('eeq-ser').value||null,criticidade:document.getElementById('eeq-crit').value,observacoes:document.getElementById('eeq-obs').value||null,data_instalacao:document.getElementById('eeq-dt').value||null};
+  try { const r=await apiCall('/api/pcm/equipamentos/'+id,{method:'PUT',body:JSON.stringify(payload)}); if(!r.ok){const d=await r.json();throw new Error(d.detail);} closeModal('m-edit-equip'); toast('Equipamento atualizado!'); await loadPCMMeta(); pcmLoadEquip(); } catch(e){toast(e.message,false);}
 }
 
-async function deleteEquip(id, nome) {
-  if (!confirm('Excluir o equipamento "' + nome + '"? Esta ação não pode ser desfeita.')) return;
-  try {
-    await api('/api/equipamentos/' + id, { method: 'DELETE' });
-    toast(nome + ' excluído');
-    loadEquip();
-    await loadMeta();
-  } catch(e) { toast(e.message, false); }
-}
-
-// ── COLABORADORES ─────────────────────────────────────────────
-async function loadColabs() {
-  const users = await api('/api/users/');
-  if (!users) return;
-  const initials = n => n.split(' ').map(x => x[0]).slice(0,2).join('').toUpperCase();
-  const colors = ['#38bdf8','#22c55e','#f97316','#a78bfa','#f59e0b'];
-  document.getElementById('colabs-table').innerHTML = `<table><thead><tr><th>Colaborador</th><th>Cargo</th><th>Especialidade</th><th>Perfil</th><th>Situação</th><th>Ações</th></tr></thead><tbody>` +
-    users.map((u, i) => `<tr><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;border-radius:50%;background:var(--nav);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:${colors[i%colors.length]}">${initials(u.nome)}</div><div><strong>${u.nome}</strong><div style="font-size:11px;color:var(--muted)">${u.email}</div></div></div></td><td>${u.cargo || '—'}</td><td>${u.especialidade ? `<span class="badge ba">${u.especialidade}</span>` : '—'}</td><td>${roleBadge(u.role)}</td><td>${u.is_active ? '<span class="badge bg">Ativo</span>' : '<span class="badge br">Inativo</span>'}</td><td style="display:flex;gap:6px;"><button class="btn btn-s btn-sm" onclick="editUser(${u.id},'${u.nome}','${u.cargo||''}','${u.especialidade||'Mecânica'}','${u.role}','${u.telefone||''}')">✏ Editar</button>${u.id !== USER.id ? `<button class="btn btn-danger btn-sm" onclick="deactivateUser(${u.id},'${u.nome}')">${u.is_active ? '✕ Desativar' : '✓ Ativar'}</button>` : ''}</td></tr>`).join('') +
-    `</tbody></table>`;
-}
-
-async function saveColab() {
-  const payload = {
-    nome: document.getElementById('co-nome').value,
-    email: document.getElementById('co-email').value,
-    password: document.getElementById('co-pass').value,
-    cargo: document.getElementById('co-cargo').value || null,
-    especialidade: document.getElementById('co-esp').value,
-    role: document.getElementById('co-role').value,
-    telefone: document.getElementById('co-tel').value || null,
-    matricula: document.getElementById('co-mat').value || null
-  };
-  if (!payload.nome || !payload.email || !payload.password) { toast('Nome, e-mail e senha são obrigatórios', false); return; }
-  try { await api('/api/users/', { method: 'POST', body: JSON.stringify(payload) }); closeModal('m-colab'); toast('Colaborador cadastrado!'); loadColabs(); await loadMeta(); } catch(e) { toast(e.message, false); }
-}
-
-// ── RELATÓRIOS ────────────────────────────────────────────────
-async function loadRel() {
-  const [dash, rel] = await Promise.all([api('/api/dashboard/stats'), api('/api/dashboard/relatorio')]);
-  if (!dash || !rel) return;
-
-  const mttr = rel.resumo.mttr_horas;
-  document.getElementById('rel-kpis').innerHTML = [
-    ['MTTR', mttr + 'h', '#f97316', 'Tempo médio de reparo'],
-    ['Taxa de conclusão', rel.resumo.taxa_conclusao + '%', '#22c55e', 'OS concluídas'],
-    ['Tempo total', rel.resumo.tempo_total_horas + 'h', '#38bdf8', 'Horas trabalhadas'],
-    ['Total OS', rel.resumo.total_os, '#a78bfa', 'Todas as ordens'],
-  ].map(([l,v,c,s]) => `<div class="mc"><div class="mc-accent" style="background:${c}"></div><div class="mc-lbl">${l}</div><div class="mc-val" style="color:${c}">${v}</div><div class="mc-sub">${s}</div></div>`).join('');
-
-  const mCtx = document.getElementById('c-mes');
-  if (mCtx) {
-    if (charts['mes']) charts['mes'].destroy();
-    charts['mes'] = new Chart(mCtx, { type: 'bar', data: { labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], datasets: [{ data: dash.por_mes.map(x => x.total), backgroundColor: dash.por_mes.map((x,i) => i === new Date().getMonth() ? '#f97316' : '#38bdf8'), borderRadius: 4, borderSkipped: false }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } } } });
-  }
-  const rCtx = document.getElementById('c-resp');
-  if (rCtx && rel.por_responsavel.length) {
-    if (charts['resp']) charts['resp'].destroy();
-    charts['resp'] = new Chart(rCtx, { type: 'bar', data: { labels: rel.por_responsavel.map(x => x.nome.split(' ')[0]), datasets: [{ data: rel.por_responsavel.map(x => Math.round(x.horas * 10) / 10), backgroundColor: ['#38bdf8','#22c55e','#f97316','#a78bfa'], borderRadius: 4, borderSkipped: false }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } } });
-  }
-
-  document.getElementById('rel-table').innerHTML = rel.ordens.length
-    ? `<table><thead><tr><th>OS</th><th>Data</th><th>Linha</th><th>Tipo</th><th>Responsável</th><th>Horas</th><th>Materiais</th><th>Status</th></tr></thead><tbody>` +
-      rel.ordens.map(o => `<tr><td><span class="tag">${o.numero}</span></td><td>${o.data}</td><td>${o.linha || '—'}</td><td>${typeBadge(o.tipo)}</td><td>${o.responsavel}</td><td style="font-family:var(--mono)">${o.tempo != null ? o.tempo + 'h' : '—'}</td><td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.materiais || '—'}</td><td>${statusBadge(o.status)}</td></tr>`).join('') +
-      `</tbody></table>`
-    : '<div class="empty">Nenhuma OS encontrada</div>';
-}
-
-// ── MINHA CONTA ───────────────────────────────────────────────
-function openContaModal() {
-  if (!USER) return;
-  const initials = USER.nome.split(' ').map(x => x[0]).slice(0,2).join('').toUpperCase();
-  document.getElementById('conta-avatar').textContent = initials;
-  document.getElementById('conta-nome').textContent = USER.nome;
-  document.getElementById('conta-email').textContent = USER.email;
-  document.getElementById('conta-role').innerHTML = roleBadge(USER.role);
-  document.getElementById('senha-atual').value = '';
-  document.getElementById('senha-nova').value = '';
-  document.getElementById('senha-conf').value = '';
-  openModal('m-conta');
-}
-
-async function salvarSenha() {
-  const atual = document.getElementById('senha-atual').value;
-  const nova = document.getElementById('senha-nova').value;
-  const conf = document.getElementById('senha-conf').value;
-  if (!atual || !nova || !conf) { toast('Preencha todos os campos', false); return; }
-  if (nova.length < 6) { toast('Nova senha deve ter pelo menos 6 caracteres', false); return; }
-  if (nova !== conf) { toast('As senhas não coincidem', false); return; }
-  try {
-    const res = await fetch('/api/auth/change-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
-      body: JSON.stringify({ senha_atual: atual, nova_senha: nova })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Erro ao alterar senha');
-    closeModal('m-conta');
-    toast('Senha alterada com sucesso!');
-  } catch(e) { toast(e.message, false); }
-}
-
-function editUser(id, nome, cargo, esp, role, tel) {
-  document.getElementById('edit-user-id').value = id;
-  document.getElementById('edit-nome').value = nome;
-  document.getElementById('edit-cargo').value = cargo;
-  document.getElementById('edit-esp').value = esp;
-  document.getElementById('edit-role').value = role;
-  document.getElementById('edit-tel').value = tel;
-  openModal('m-edit-user');
-}
-
-async function saveEditUser() {
-  const id = document.getElementById('edit-user-id').value;
-  const payload = {
-    nome: document.getElementById('edit-nome').value,
-    cargo: document.getElementById('edit-cargo').value || null,
-    especialidade: document.getElementById('edit-esp').value,
-    role: document.getElementById('edit-role').value,
-    telefone: document.getElementById('edit-tel').value || null
-  };
-  try {
-    await api('/api/users/' + id, { method: 'PUT', body: JSON.stringify(payload) });
-    closeModal('m-edit-user');
-    toast('Colaborador atualizado!');
-    loadColabs();
-    await loadMeta();
-  } catch(e) { toast(e.message, false); }
-}
-
-async function deactivateUser(id, nome) {
-  if (!confirm(`Desativar ${nome}?`)) return;
-  try {
-    await api('/api/users/' + id, { method: 'DELETE' });
-    toast(nome + ' desativado');
-    loadColabs();
-  } catch(e) { toast(e.message, false); }
-}
-
-// ── CONFIGURAÇÕES ─────────────────────────────────────────────
-const LINHAS_DEFAULT = ['Linha 1 - Sachê','Linha 2 - Sachê','Linha 3 - Sachê','Linha 4 - Sachê','Linha 5 - Cartucho','Área Geral'];
-
-function getLinhas() {
-  try { return JSON.parse(localStorage.getItem('pcm_linhas') || 'null') || LINHAS_DEFAULT; } 
-  catch { return LINHAS_DEFAULT; }
-}
-
-function saveLinhas(linhas) {
-  localStorage.setItem('pcm_linhas', JSON.stringify(linhas));
-}
-
-function getLinhasOptions() {
-  return getLinhas().map(l => `<option value="${l}">${l}</option>`).join('');
-}
-
-function populateLinhasSelects() {
-  const opts = getLinhasOptions();
-  ['os-equip-linha','eq-linha','eeq-linha'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = opts;
+async function pcmDeleteEquip(id, nome) {
+  confirmAction('Excluir Equipamento','Excluir "'+nome+'"? Esta ação não pode ser desfeita.', async()=>{
+    const r=await apiCall('/api/pcm/equipamentos/'+id,{method:'DELETE'}); if(!r.ok){const d=await r.json();toast(d.detail,false);return;} toast(nome+' excluído.'); await loadPCMMeta(); pcmLoadEquip();
   });
 }
 
-function loadConfig() {
-  const linhas = getLinhas();
-  document.getElementById('cfg-user').textContent = USER ? USER.nome : '—';
-  document.getElementById('cfg-role').textContent = USER ? USER.role : '—';
-  document.getElementById('linhas-list').innerHTML = linhas.length
-    ? linhas.map((l, i) => `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:0.5px solid var(--border);">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;"></span>
-          <span style="font-size:13px;">${l}</span>
+/* PCM RELATÓRIOS */
+async function pcmLoadRel() {
+  const el=document.getElementById('pcm-s-rel'); if(!el) return;
+  const [statsR, mensalR] = await Promise.all([apiCall('/api/pcm/dashboard/stats'), apiCall('/api/pcm/dashboard/os-mensais')]);
+  const d=statsR.ok?await statsR.json():{};
+  const mensal=mensalR.ok?await mensalR.json():[];
+  el.innerHTML=`
+    <div class="page-hdr"><div><div class="page-title">Relatórios</div><div class="page-sub">Indicadores e análises</div></div></div>
+    <div class="metrics">${[
+      ['MTTR',(d.mttr??0)+'h','#f97316','Tempo médio de reparo'],
+      ['Taxa de conclusão',(d.taxa_conclusao??0)+'%','#22c55e','OS concluídas'],
+      ['Total OS',d.total_os??0,'#a78bfa','Todas as ordens'],
+      ['Equipamentos',d.equipamentos_ativos??0,'#38bdf8','Ativos'],
+    ].map(([l,v,c,s])=>`<div class="mc"><div class="mc-accent" style="background:${c}"></div><div class="mc-lbl">${l}</div><div class="mc-val" style="color:${c}">${v}</div><div class="mc-sub">${s}</div></div>`).join('')}</div>
+    <div class="two-col">
+      <div class="card"><div class="card-hdr"><span class="card-title">OS por Mês</span></div><div style="padding:14px;position:relative;height:190px"><canvas id="pcm-c-mes"></canvas></div></div>
+      <div class="card"><div class="card-hdr"><span class="card-title">Resumo do Período</span></div>
+        <div style="padding:14px;font-size:13px;color:var(--muted);line-height:2.2">
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px"><span>Total de OS</span><strong style="color:var(--text)">${d.total_os??0}</strong></div>
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px"><span>OS Concluídas</span><strong style="color:#22c55e">${d.os_concluidas??0}</strong></div>
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px"><span>OS Abertas</span><strong style="color:#f59e0b">${d.os_abertas??0}</strong></div>
+          <div style="display:flex;justify-content:space-between"><span>Preventivas vencidas</span><strong style="color:#ef4444">${d.preventivas_vencidas??0}</strong></div>
         </div>
-        <div style="display:flex;gap:6px;">
-          <button class="btn btn-s btn-sm" onclick="editLinha(${i})">✏</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteLinha(${i})">✕</button>
-        </div>
-      </div>`).join('')
-    : '<div class="empty" style="padding:20px">Nenhuma linha cadastrada</div>';
-}
-
-function editLinha(idx) {
-  const linhas = getLinhas();
-  document.getElementById('linha-modal-title').textContent = 'Editar Linha / Área';
-  document.getElementById('linha-edit-idx').value = idx;
-  document.getElementById('linha-nome').value = linhas[idx];
-  openModal('m-nova-linha');
-}
-
-function deleteLinha(idx) {
-  const linhas = getLinhas();
-  if (!confirm('Excluir "' + linhas[idx] + '"?')) return;
-  linhas.splice(idx, 1);
-  saveLinhas(linhas);
-  loadConfig();
-  populateLinhasSelects();
-  toast('Linha removida');
-}
-
-function salvarLinha() {
-  const nome = document.getElementById('linha-nome').value.trim();
-  if (!nome) { toast('Digite o nome da linha', false); return; }
-  const linhas = getLinhas();
-  const idx = document.getElementById('linha-edit-idx').value;
-  if (idx !== '') {
-    linhas[parseInt(idx)] = nome;
-  } else {
-    linhas.push(nome);
+      </div>
+    </div>`;
+  if (mensal.length) {
+    if (PCM_CHARTS.mes) PCM_CHARTS.mes.destroy();
+    PCM_CHARTS.mes = new Chart(document.getElementById('pcm-c-mes'),{type:'bar',data:{labels:mensal.map(x=>x.label),datasets:[{data:mensal.map(x=>x.total),backgroundColor:'#38bdf8',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:10}}}}}});
   }
-  saveLinhas(linhas);
-  closeModal('m-nova-linha');
-  loadConfig();
-  populateLinhasSelects();
-  toast('Linha salva!');
 }
 
-function openNovaLinha() {
-  document.getElementById('linha-modal-title').textContent = 'Nova Linha / Área';
-  document.getElementById('linha-edit-idx').value = '';
-  document.getElementById('linha-nome').value = '';
-  openModal('m-nova-linha');
+/* PCM CONFIGURAÇÕES */
+const LINHAS_DEFAULT=['Linha 1 - Sachê','Linha 2 - Sachê','Linha 3 - Sachê','Linha 4 - Sachê','Linha 5 - Cartucho','Área Geral'];
+function getLinhas(){try{return JSON.parse(localStorage.getItem('pcm_linhas')||'null')||LINHAS_DEFAULT;}catch{return LINHAS_DEFAULT;}}
+function saveLinhas(l){localStorage.setItem('pcm_linhas',JSON.stringify(l));}
+function getLinhasOptions(){return getLinhas().map(l=>`<option value="${l}">${l}</option>`).join('');}
+function populateLinhasSelects(){
+  const opts=getLinhasOptions();
+  ['os-equip-linha','eq-linha','eeq-linha'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
 }
 
-// ── INIT ──────────────────────────────────────────────────────
-if (TOKEN && USER) {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app-screen').style.display = 'flex';
-  document.getElementById('nav-nome').textContent = USER.nome.split(' ')[0];
-  loadMeta().then(() => { loadDash(); populateLinhasSelects(); });
+async function pcmLoadConfig() {
+  const el=document.getElementById('pcm-s-config'); if(!el) return;
+  const linhas=getLinhas();
+  el.innerHTML=`
+    <div class="page-hdr"><div><div class="page-title">Configurações</div><div class="page-sub">Gerencie linhas, áreas e parâmetros</div></div></div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Linhas e Áreas</span><button class="btn btn-p btn-sm" onclick="openNovaLinha()">+ Adicionar</button></div>
+        <div id="linhas-list" style="padding:6px 0">${linhas.map((l,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:8px"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block"></span><span style="font-size:13px">${l}</span></div><div style="display:flex;gap:5px"><button class="btn btn-s btn-sm" onclick="editLinha(${i})">✏</button><button class="btn btn-danger btn-sm" onclick="deleteLinha(${i})">✕</button></div></div>`).join('')}</div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Informações do Sistema</span></div>
+        <div style="padding:14px;font-size:13px;color:var(--muted);line-height:2.2">
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px"><span>Versão</span><strong style="color:var(--text)">PCM v2.0</strong></div>
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px"><span>Empresa</span><strong style="color:var(--text)">Qualimpel Indústria Química</strong></div>
+          <div style="display:flex;justify-content:space-between"><span>Usuário</span><strong style="color:var(--text)">${ME.nome}</strong></div>
+        </div>
+      </div>
+    </div>`;
 }
 
-document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+function openNovaLinha(){document.getElementById('linha-modal-title').textContent='Nova Linha / Área';document.getElementById('linha-edit-idx').value='';document.getElementById('linha-nome').value='';openModal('m-nova-linha');}
+function editLinha(idx){const l=getLinhas();document.getElementById('linha-modal-title').textContent='Editar Linha / Área';document.getElementById('linha-edit-idx').value=idx;document.getElementById('linha-nome').value=l[idx];openModal('m-nova-linha');}
+function deleteLinha(idx){const l=getLinhas();if(!confirm('Excluir "'+l[idx]+'"?'))return;l.splice(idx,1);saveLinhas(l);pcmLoadConfig();populateLinhasSelects();toast('Linha removida.');}
+function salvarLinha(){const nome=document.getElementById('linha-nome').value.trim();if(!nome){toast('Digite o nome.',false);return;}const l=getLinhas();const idx=document.getElementById('linha-edit-idx').value;if(idx!=='')l[parseInt(idx)]=nome;else l.push(nome);saveLinhas(l);closeModal('m-nova-linha');pcmLoadConfig();populateLinhasSelects();toast('Linha salva!');}
+
+/* ══════════════════════════════════════════════════════════════
+   ADMIN USUÁRIOS
+══════════════════════════════════════════════════════════════ */
+async function renderAdminUsers() {
+  const mc=document.getElementById('main-content');
+  mc.innerHTML='<div class="loading">Carregando usuários...</div>';
+  const r=await apiCall('/api/users/');
+  if(!r.ok){mc.innerHTML='<div class="empty">Erro ao carregar.</div>';return;}
+  USERS_CACHE=await r.json();
+  renderUsersTable(USERS_CACHE);
+}
+
+function renderUsersTable(users) {
+  const mc=document.getElementById('main-content');
+  const isAdmin=ME.role_portal==='admin'||ME.role_portal==='superadmin';
+  mc.innerHTML=`
+    <div class="page-hdr"><div class="page-title">Usuários do Sistema</div>${isAdmin?`<button class="btn btn-p" onclick="openUserModal()">+ Novo Usuário</button>`:''}</div>
+    <div class="admin-wrap">
+      <div class="admin-search"><input type="text" placeholder="Buscar por nome, e-mail ou cargo..." oninput="filterAdminUsers(this.value)"/></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Nome</th><th>E-mail</th><th>Cargo</th><th>Perfil</th><th>Módulos</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody id="users-tbody">${renderUserRows(users)}</tbody>
+      </table></div>
+    </div>`;
+}
+
+function renderUserRows(users) {
+  if(!users.length) return `<tr><td colspan="7"><div class="empty">Nenhum usuário encontrado.</div></td></tr>`;
+  const roleMap={superadmin:'bp',admin:'br',usuario:'bgy'};
+  const roleLabel={superadmin:'Superadmin',admin:'Admin',usuario:'Usuário'};
+  return users.map(u=>{
+    const pills=MODULES.filter(m=>u[m.acesso]).map(m=>`<span class="mpill">${m.label}</span>`).join('');
+    const canEdit=ME.role_portal==='superadmin'||(u.role_portal!=='superadmin');
+    const canDel=u.id!==ME.id&&(ME.role_portal==='superadmin'||u.role_portal!=='superadmin');
+    return `<tr>
+      <td><strong>${u.nome}</strong>${u.matricula?`<br><span style="font-size:11px;color:var(--muted)">Matr. ${u.matricula}</span>`:''}</td>
+      <td style="color:var(--muted)">${u.email}</td>
+      <td style="color:var(--muted)">${u.cargo||'—'}</td>
+      <td><span class="badge ${roleMap[u.role_portal]||'bgy'}">${roleLabel[u.role_portal]||u.role_portal}</span></td>
+      <td><div class="mod-pills">${pills||'<span style="font-size:11px;color:var(--muted)">Nenhum</span>'}</div></td>
+      <td><span class="badge ${u.is_active?'bg':'br'}">${u.is_active?'Ativo':'Inativo'}</span></td>
+      <td style="display:flex;gap:5px">
+        ${canEdit?`<button class="btn btn-s btn-sm" onclick='openUserModal(${JSON.stringify(u)})'>✏ Editar</button>`:''}
+        <button class="btn btn-s btn-sm" onclick="adminResetPwd(${u.id},'${u.nome.split(' ')[0]}')">🔑</button>
+        ${canDel?`<button class="btn btn-danger btn-sm" onclick="adminDeleteUser(${u.id},'${u.nome.split(' ')[0]}')">✕</button>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterAdminUsers(q) {
+  const t=q.toLowerCase();
+  const f=USERS_CACHE.filter(u=>u.nome.toLowerCase().includes(t)||u.email.toLowerCase().includes(t)||(u.cargo||'').toLowerCase().includes(t));
+  document.getElementById('users-tbody').innerHTML=renderUserRows(f);
+}
+
+function openUserModal(user=null) {
+  document.getElementById('modal-user-title').textContent=user?'Editar Usuário':'Novo Usuário';
+  document.getElementById('u-id').value=user?user.id:'';
+  document.getElementById('u-nome').value=user?user.nome:'';
+  document.getElementById('u-email').value=user?user.email:'';
+  document.getElementById('u-senha').value='';
+  document.getElementById('u-matricula').value=user?(user.matricula||''):'';
+  document.getElementById('u-cargo').value=user?(user.cargo||''):'';
+  document.getElementById('u-tel').value=user?(user.telefone||''):'';
+  document.getElementById('u-role').value=user?user.role_portal:'usuario';
+  document.getElementById('u-ativo').value=user?String(user.is_active):'true';
+  document.getElementById('u-senha-hint').style.display=user?'inline':'none';
+  // Permissões
+  document.getElementById('perm-grid').innerHTML=MODULES.map(m=>`
+    <div class="perm-row">
+      <div class="perm-left">
+        <label class="toggle"><input type="checkbox" id="perm-${m.key}" ${user&&user[m.acesso]?'checked':''} onchange="togglePermRole('${m.key}')"/><span class="slider"></span></label>
+        <span class="perm-label">${m.icon} ${m.label}</span>
+      </div>
+      <select class="perm-role" id="prole-${m.key}" ${!(user&&user[m.acesso])?'disabled':''}>
+        <option value="admin" ${user&&user['role_'+m.key]==='admin'?'selected':''}>Admin</option>
+        <option value="gestor" ${user&&user['role_'+m.key]==='gestor'?'selected':''}>Gestor</option>
+        <option value="tecnico" ${!user||user['role_'+m.key]==='tecnico'||!user['role_'+m.key]?'selected':''}>Técnico</option>
+      </select>
+    </div>`).join('');
+  openModal('modal-user');
+}
+
+function togglePermRole(key) { document.getElementById('prole-'+key).disabled=!document.getElementById('perm-'+key).checked; }
+
+async function saveUser() {
+  const id=document.getElementById('u-id').value;
+  const senha=document.getElementById('u-senha').value;
+  const body={nome:document.getElementById('u-nome').value.trim(),email:document.getElementById('u-email').value.trim(),matricula:document.getElementById('u-matricula').value.trim()||null,cargo:document.getElementById('u-cargo').value.trim()||null,telefone:document.getElementById('u-tel').value.trim()||null,role_portal:document.getElementById('u-role').value,is_active:document.getElementById('u-ativo').value==='true'};
+  MODULES.forEach(m=>{body['acesso_'+m.key]=document.getElementById('perm-'+m.key).checked;body['role_'+m.key]=document.getElementById('prole-'+m.key).value||null;});
+  if (!body.nome||!body.email){toast('Preencha nome e e-mail.',false);return;}
+  if (!id){if(!senha||senha.length<6){toast('Informe uma senha com ao menos 6 caracteres.',false);return;}body.senha=senha;}
+  try {
+    const url=id?'/api/users/'+id:'/api/users/';
+    const r=await apiCall(url,{method:id?'PUT':'POST',body:JSON.stringify(body)});
+    const data=await r.json(); if(!r.ok) throw new Error(data.detail||'Erro ao salvar.');
+    toast(id?'Usuário atualizado!':'Usuário criado!'); closeModal('modal-user'); renderAdminUsers();
+  } catch(e){toast(e.message,false);}
+}
+
+async function adminResetPwd(id,nome) {
+  confirmAction('Redefinir Senha','A senha de '+nome+' será redefinida para "qualimpel123". Confirma?', async()=>{
+    const r=await apiCall('/api/users/'+id+'/reset-password',{method:'POST'});
+    const d=await r.json(); toast(r.ok?d.message:d.detail,r.ok);
+  });
+}
+
+async function adminDeleteUser(id,nome) {
+  confirmAction('Excluir Usuário','Excluir "'+nome+'"? Esta ação não pode ser desfeita.', async()=>{
+    const r=await apiCall('/api/users/'+id,{method:'DELETE'});
+    if(!r.ok){const d=await r.json();toast(d.detail,false);return;} toast('Usuário excluído.'); renderAdminUsers();
+  });
+}
+
+/* MINHA CONTA */
+function loadContaInfo() {
+  if(!ME) return;
+  document.getElementById('conta-avatar').textContent=initials(ME.nome);
+  document.getElementById('conta-nome').textContent=ME.nome;
+  document.getElementById('conta-email').textContent=ME.email;
+  document.getElementById('cp-atual').value='';
+  document.getElementById('cp-nova').value='';
+  document.getElementById('cp-conf').value='';
+}
+async function changePassword() {
+  const atual=document.getElementById('cp-atual').value;
+  const nova=document.getElementById('cp-nova').value;
+  const conf=document.getElementById('cp-conf').value;
+  if(!atual||!nova||!conf){toast('Preencha todos os campos.',false);return;}
+  if(nova.length<6){toast('Nova senha deve ter pelo menos 6 caracteres.',false);return;}
+  if(nova!==conf){toast('As senhas não coincidem.',false);return;}
+  try {
+    const r=await apiCall('/api/auth/change-password',{method:'POST',body:JSON.stringify({senha_atual:atual,nova_senha:nova})});
+    const data=await r.json(); if(!r.ok) throw new Error(data.detail||'Erro ao alterar senha.');
+    closeConta(); toast('Senha alterada com sucesso!');
+  } catch(e){toast(e.message,false);}
+}
+
+/* INIT */
+document.getElementById('login-senha').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+(async()=>{
+  if(TOKEN){
+    try{ await loadMe(); if(ME){showApp();return;} }catch(e){}
+  }
+  document.getElementById('screen-login').classList.add('active');
+})();
 </script>
 </body>
 </html>
